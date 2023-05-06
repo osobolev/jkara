@@ -29,7 +29,7 @@ final class RealSegments {
         }
         String origText = buf.toString().trim();
         Segment fastSegment = fast.segments.get(prevSegment.intValue());
-        result.add(new Segment(fastSegment.start(), fastSegment.end(), origText));
+        result.add(new Segment(fastSegment.index(), fastSegment.start(), fastSegment.end(), origText));
     }
 
     List<Segment> split() {
