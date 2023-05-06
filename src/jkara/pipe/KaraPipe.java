@@ -8,6 +8,8 @@ import jkara.sync.TextSync;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public final class KaraPipe {
 
@@ -34,7 +36,7 @@ public final class KaraPipe {
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     private static void log(String message) {
-        System.out.println(">>>>> " + message);
+        System.out.printf(">>>>> [%s] %s%n", LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")), message);
     }
 
     public void downloadYoutube(String url, Path audio) throws IOException, InterruptedException {
@@ -59,6 +61,7 @@ public final class KaraPipe {
      * no_vocals.wav + ass file -> ffmpeg -> karaoke.mp4
      */
     public void makeKaraoke(Path audio, String maybeShifts, String maybeLanguage, Path userText, Path workDir) throws IOException, InterruptedException, SyncException {
+        long t0 = System.currentTimeMillis();
         Files.createDirectories(workDir);
         Stages stages = new Stages(workDir);
 
@@ -138,6 +141,20 @@ public final class KaraPipe {
                 karaoke.output().toString()
             );
         }
-        log("Done: " + karaoke.input());
+        long t1 = System.currentTimeMillis();
+        log(String.format("Done in %s, result written to %s", duration(t1 - t0), karaoke.input()));
+    }
+
+    private static String duration(long millis) {
+        long totalSeconds = millis / 1000;
+        long seconds = totalSeconds % 60;
+        long totalMinutes = totalSeconds / 60;
+        long minutes = totalMinutes % 60;
+        long hours = totalMinutes / 60;
+        if (hours > 0) {
+            return String.format("%s:%02d:%02d", hours, minutes, seconds);
+        } else {
+            return String.format("%s:%02d", minutes, seconds);
+        }
     }
 }
