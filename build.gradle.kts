@@ -2,8 +2,8 @@ plugins {
     id("java")
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
+group = "io.github.osobolev"
+version = "1.0"
 
 repositories {
     mavenCentral()
@@ -34,4 +34,23 @@ tasks {
 dependencies {
     implementation("io.github.java-diff-utils:java-diff-utils:4.12")
     implementation("org.json:json:20230227")
+}
+
+tasks.jar {
+    manifest {
+        attributes(
+            "Class-Path" to configurations.runtimeClasspath.map { conf -> conf.files.map { f -> f.name }.sorted().joinToString(" ") },
+            "Main-Class" to "jkara.JKara"
+        )
+    }
+}
+
+tasks.register("distr", Copy::class) {
+    from(configurations.runtimeClasspath)
+    from(tasks.jar)
+    from("config")
+    from(".") {
+        include("ffmpeg/**")
+    }
+    into("$rootDir/distr")
 }

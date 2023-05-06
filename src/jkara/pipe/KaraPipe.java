@@ -31,6 +31,7 @@ public final class KaraPipe {
     }
 
     public void downloadYoutube(String url, Path audio) throws IOException, InterruptedException {
+        Files.createDirectories(audio.getParent());
         runner.runExe(
             "yt-dlp",
             "--extract-audio",
