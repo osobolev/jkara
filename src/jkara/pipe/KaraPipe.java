@@ -7,8 +7,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@SuppressWarnings("UseOfSystemOutOrSystemErr")
 public final class KaraPipe {
+
+    private final ProcRunner runner;
+
+    public KaraPipe(Path ffmpeg) {
+        this.runner = new ProcRunner(ffmpeg);
+    }
 
     private static String escapeFilter(String path) {
         StringBuilder buf = new StringBuilder();
@@ -27,22 +32,17 @@ public final class KaraPipe {
 
     /**
      * Pipeline:
+     * audio.mp3 -> demucs -> vocals.wav + no_vocals.wav
      * vocals.wav -> fast_whisper -> fast.json (semi-accurate transcription)
      * text.txt + fast.json -> TextSync -> text.json (real lyrics with timestamps from prev step)
      * text.json -> whisperx -> aligned.json (character-level timestamps for real lyrics)
      * aligned.json + text.txt -> AssSync -> ass file
+     * no_vocals.wav + ass file -> ffmpeg -> karaoke.mp4
      */
-    public static void main(String[] args) throws IOException, InterruptedException {
-        Path audio = Path.of("C:\\home\\projects\\my\\kara\\work\\PjdEDOIai8Y.mp3");
-        Path text = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
-
-        Path ffmpeg = Path.of("ffmpeg").toAbsolutePath(); // todo
-        ProcRunner runner = new ProcRunner(ffmpeg);
-
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
+    public void makeKaraoke(Path audio, Path text) throws IOException, InterruptedException {
         Path dir = Path.of("work"); // todo
         Files.createDirectories(dir);
-
-        // todo: run youtube-download (optional)
 
         String id = "PjdEDOIai8Y"; // todo
         Path demucsDir = dir.resolve("htdemucs/" + id);
@@ -107,5 +107,21 @@ public final class KaraPipe {
             );
         }
         System.out.println("Done: " + karaoke);
+    }
+
+    /**
+     * Pipeline:
+     * vocals.wav -> fast_whisper -> fast.json (semi-accurate transcription)
+     * text.txt + fast.json -> TextSync -> text.json (real lyrics with timestamps from prev step)
+     * text.json -> whisperx -> aligned.json (character-level timestamps for real lyrics)
+     * aligned.json + text.txt -> AssSync -> ass file
+     */
+    public static void main(String[] args) throws IOException, InterruptedException {
+        Path audio = Path.of("C:\\home\\projects\\my\\kara\\work\\PjdEDOIai8Y.mp3");
+        Path text = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
+
+        Path ffmpeg = Path.of("ffmpeg").toAbsolutePath(); // todo
+        KaraPipe pipe = new KaraPipe(ffmpeg);
+        pipe.makeKaraoke(audio, text);
     }
 }
