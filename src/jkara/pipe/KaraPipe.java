@@ -30,6 +30,16 @@ public final class KaraPipe {
         return buf.toString();
     }
 
+    public void downloadYoutube(String url, Path audio) throws IOException, InterruptedException {
+        runner.runExe(
+            "yt-dlp",
+            "--extract-audio",
+            "--audio-format", "mp3",
+            "--output", audio.toString(),
+            url
+        );
+    }
+
     /**
      * Pipeline:
      * audio.mp3 -> demucs -> vocals.wav + no_vocals.wav
@@ -51,7 +61,7 @@ public final class KaraPipe {
         Path noVocals = demucsDir.resolve("no_vocals.wav");
         if (!Files.exists(vocals) || !Files.exists(noVocals)) {
             System.out.println("Separating vocals and instrumental...");
-            String shifts = "0"; // todo
+            String shifts = "0"; // todo: ???
             runner.runExe(
                 "demucs",
                 "--two-stems=vocals",
@@ -110,13 +120,6 @@ public final class KaraPipe {
         System.out.println("Done: " + karaoke);
     }
 
-    /**
-     * Pipeline:
-     * vocals.wav -> fast_whisper -> fast.json (semi-accurate transcription)
-     * text.txt + fast.json -> TextSync -> text.json (real lyrics with timestamps from prev step)
-     * text.json -> whisperx -> aligned.json (character-level timestamps for real lyrics)
-     * aligned.json + text.txt -> AssSync -> ass file
-     */
     public static void main(String[] args) throws IOException, InterruptedException {
         Path audio = Path.of("C:\\home\\projects\\my\\kara\\work\\PjdEDOIai8Y.mp3");
         Path text = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
@@ -124,6 +127,7 @@ public final class KaraPipe {
 
         Path ffmpeg = Path.of("ffmpeg").toAbsolutePath(); // todo
         KaraPipe pipe = new KaraPipe(ffmpeg);
+        pipe.downloadYoutube("https://www.youtube.com/watch?v=PjdEDOIai8Y", workDir.resolve("selfmachine.mp3"));
         pipe.makeKaraoke(audio, "en", text, workDir);
     }
 }
