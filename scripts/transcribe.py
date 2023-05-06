@@ -1,11 +1,16 @@
 import json
+import logging
 import sys
 
 import faster_whisper
 
 
+logging.basicConfig()
+
+
 def transcribe(audio, json_path):
     model = faster_whisper.WhisperModel("large-v2", compute_type="float32")
+    model.logger.setLevel(logging.DEBUG)
     language = "en" # todo!!!
     segments, info = model.transcribe(audio, language=language, vad_filter=True)
     
