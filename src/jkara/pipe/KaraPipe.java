@@ -126,7 +126,7 @@ public final class KaraPipe {
             }
 
             runner.runFFMPEG(
-                "-y",
+                "-y", "-hide_banner",
                 "-f", "lavfi",
                 "-i", String.format("color=size=1280x720:duration=%s:rate=24:color=black", duration),
                 "-i", noVocals.input().toString(),
