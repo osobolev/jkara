@@ -1,6 +1,6 @@
-package jkara;
+package jkara.sync;
 
-public record Segment(
+record Segment(
     double start,
     double end,
     String text

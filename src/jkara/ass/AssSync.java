@@ -1,11 +1,9 @@
 package jkara.ass;
 
-import jkara.Segment;
 import jkara.Util;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 
 public final class AssSync {
 
@@ -16,33 +14,36 @@ public final class AssSync {
         int ia = 0;
         while (true) {
             int ir0 = ir;
-            while (ir < raw.list.size()) {
-                String cr = raw.list.get(ir);
-                if (Util.isLetter(cr.charAt(0)))
+            while (ir < raw.size()) {
+                char cr = raw.get(ir);
+                if (Util.isLetter(cr))
                     break;
                 ir++;
             }
-            if (ir >= raw.list.size())
+            if (ir >= raw.size())
                 break;
             int ia0 = ia;
-            while (ia < aligned.list.size()) {
-                Segment ca = aligned.list.get(ia);
-                if (Util.isLetter(ca.text().charAt(0)))
+            while (ia < aligned.size()) {
+                char ca = aligned.get(ia);
+                if (Util.isLetter(ca))
                     break;
                 ia++;
             }
-            if (ia >= aligned.list.size()) {
+            if (ia >= aligned.size()) {
                 // todo: assign some time to tail of real???
                 break;
             }
             if (ir > ir0) {
-                List<String> skipped = raw.list.subList(ir0, ir);
                 // todo: assign some times to them too???
             }
-            String cr = raw.list.get(ir);
-            Segment ca = aligned.list.get(ia);
-            if (!ca.text().equalsIgnoreCase(cr))
+            char cr = raw.get(ir);
+            CSegment ca = aligned.list.get(ia);
+            if (!String.valueOf(ca.ch()).equalsIgnoreCase(String.valueOf(cr)))
                 throw new IllegalStateException();
+
+            if (!Double.isNaN(ca.start()) && !Double.isNaN(ca.end())) {
+                raw.timestamps[ir] = new Timestamps(ca.start(), ca.end());
+            }
             ir++;
             ia++;
         }

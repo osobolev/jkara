@@ -7,7 +7,6 @@ import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Chunk;
 import com.github.difflib.patch.Patch;
 import jkara.OutputFactory;
-import jkara.Segment;
 import jkara.Util;
 import org.json.JSONArray;
 import org.json.JSONObject;
