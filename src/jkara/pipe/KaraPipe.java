@@ -51,22 +51,27 @@ public final class KaraPipe {
 
         Path fastJson = dir.resolve("fast.json");
         if (!Files.exists(fastJson)) {
+            System.out.println("Transcribing...");
             runner.runPython("scripts/transcribe.py", vocals.toString(), fastJson.toString());
         }
         Path textJson = dir.resolve("text.json");
         if (!Files.exists(textJson)) {
+            System.out.println("Synchronizing transcription with text...");
             TextSync.sync(text, fastJson, () -> Files.newBufferedWriter(textJson));
         }
         Path alignedJson = dir.resolve("aligned.json");
         if (!Files.exists(alignedJson)) {
+            System.out.println("Performing alignment...");
             runner.runPython("scripts/align.py", vocals.toString(), textJson.toString(), alignedJson.toString());
         }
         Path ass = dir.resolve("subs.ass");
         if (!Files.exists(ass)) {
+            System.out.println("Creating subtitles...");
             AssSync.sync(text, alignedJson, () -> Files.newBufferedWriter(ass));
         }
         Path karaoke = dir.resolve("karaoke.mp4");
         if (!Files.exists(karaoke)) {
+            System.out.println("Building karaoke video...");
             Path tmpDuration = Files.createTempFile("duration", ".txt");
             String duration;
             try {
