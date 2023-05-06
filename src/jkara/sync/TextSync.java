@@ -18,10 +18,10 @@ import java.util.*;
 
 public final class TextSync {
 
-    private final FastResult fastResult;
+    private final ErrorContext errorContext;
 
-    private TextSync(FastResult fastResult) {
-        this.fastResult = fastResult;
+    private TextSync(ErrorContext errorContext) {
+        this.errorContext = errorContext;
     }
 
     private static Integer segment(Iterable<CWS> fastChars) {
@@ -37,64 +37,11 @@ public final class TextSync {
         return null;
     }
 
-    private Integer getErrorSegment(int fastPosition) {
-        List<CWS> fast = fastResult.list;
-        if (fastPosition < fast.size()) {
-            CWS ch = fast.get(fastPosition);
-            if (ch.segment != null)
-                return ch.segment;
-        }
-        if (fastPosition > 0 && fastPosition + 1 < fast.size()) {
-            CWS before = fast.get(fastPosition - 1);
-            CWS after = fast.get(fastPosition + 1);
-            if (before.segment != null && after.segment != null && Objects.equals(before.segment, after.segment))
-                return before.segment;
-        }
-        if (fastPosition > 0) {
-            CWS before = fast.get(fastPosition - 1);
-            if (before.segment != null)
-                return before.segment;
-        }
-        if (fastPosition + 1 < fast.size()) {
-            CWS after = fast.get(fastPosition + 1);
-            if (after.segment != null)
-                return after.segment;
-        }
-        return null;
-    }
-
-    private static String getFallbackErrorContext(List<CWS> chars, int position) {
-        StringBuilder buf = new StringBuilder();
-        for (int i = position - 15; i <= position + 15; i++) {
-            if (i >= 0 && i < chars.size()) {
-                CWS ch = chars.get(i);
-                buf.appendCodePoint(ch.ch);
-            }
-        }
-        if (buf.isEmpty())
-            return "<unknown>";
-        return "'" + buf + "'";
-    }
-
-    private String getErrorContext(int fastPosition) {
-        Integer errorSegment = getErrorSegment(fastPosition);
-        if (errorSegment != null) {
-            Segment segment = fastResult.segments.get(errorSegment.intValue());
-            return String.format("'%s' (index %d)", segment.text(), segment.index());
-        }
-        return getFallbackErrorContext(fastResult.list, fastPosition);
-    }
-
-    private static void syncError(String ctx) throws SyncException {
-        throw new SyncException(String.format("Cannot sync at %s", ctx));
-    }
-
     private void setSegment(Integer segment, List<CWS> chars, int fastPosition) throws SyncException {
         if (segment == null) {
             boolean hasText = chars.stream().anyMatch(ch -> ch.ch != ' ');
             if (hasText) {
-                String ctx = getErrorContext(fastPosition);
-                syncError(ctx);
+                errorContext.fastError(fastPosition);
             }
             return;
         }
@@ -150,8 +97,7 @@ public final class TextSync {
             CWS ch = real.get(i);
             if (ch.segment == null) {
                 if (ch.ch != ' ') {
-                    String ctx = getFallbackErrorContext(real, i);
-                    syncError(ctx);
+                    errorContext.realError(i);
                 }
             }
         }
@@ -181,7 +127,8 @@ public final class TextSync {
         RealText real = RealText.read(text);
         FastResult fast = FastResult.read(fastJson);
 
-        new TextSync(fast).align(real.list, fast.list);
+        ErrorContext errorContext = new ErrorContext(text, fastJson, real, fast);
+        new TextSync(errorContext).align(real.list, fast.list);
         List<Segment> segments = getResult(real, fast);
         JSONArray array = new JSONArray();
         for (Segment segment : segments) {
