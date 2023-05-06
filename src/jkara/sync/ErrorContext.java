@@ -66,8 +66,8 @@ final class ErrorContext {
         return getFallbackErrorContext(fastResult.list, fastPosition);
     }
 
-    private static void syncError(Path file, String ctx) throws SyncException {
-        throw new SyncException(String.format("Cannot sync at %s in file %s", ctx, file));
+    private void syncError(Path file, String ctx) throws SyncException {
+        throw new SyncException(String.format("Cannot sync at %s in file %s", ctx, file), fastJson);
     }
 
     void fastError(int fastPosition) throws SyncException {

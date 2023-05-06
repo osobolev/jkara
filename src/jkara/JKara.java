@@ -25,6 +25,7 @@ public final class JKara {
             pipe.makeKaraoke(cmd.audio, cmd.language, cmd.text, cmd.dir);
         } catch (SyncException ex) {
             System.err.println(ex.getMessage());
+            System.err.printf("Please fix %s manually%n", ex.fastJson);
             System.exit(1);
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
