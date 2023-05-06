@@ -1,6 +1,10 @@
 import json
+import logging
 import os
 import sys
+
+logging.getLogger("speechbrain.utils.torch_audio_backend").setLevel(logging.ERROR)
+logging.getLogger("speechbrain.utils.train_logger").setLevel(logging.ERROR)
 
 import torch
 import whisperx
