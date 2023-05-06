@@ -24,9 +24,11 @@ public final class KaraPipe {
         Path audio = Path.of("C:\\home\\projects\\my\\kara\\work\\separated\\htdemucs\\PjdEDOIai8Y\\vocals.wav");
         Path text = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
 
+        ProcRunner runner = new ProcRunner(Path.of("ffmpeg").toAbsolutePath());
+
         Path fastJson = Path.of("C:\\home\\projects\\my\\kara\\work\\_fast.json");
         if (!Files.exists(fastJson)) {
-            PythonRunner.runScript("scripts/transcribe.py", audio.toString(), fastJson.toString());
+            runner.runPython("scripts/transcribe.py", audio.toString(), fastJson.toString());
         }
         Path textJson = Path.of("C:\\home\\projects\\my\\kara\\work\\_text.json");
         if (!Files.exists(textJson)) {
@@ -34,7 +36,7 @@ public final class KaraPipe {
         }
         Path alignedJson = Path.of("C:\\home\\projects\\my\\kara\\work\\_aligned.json");
         if (!Files.exists(alignedJson)) {
-            PythonRunner.runScript("scripts/align.py", audio.toString(), textJson.toString(), alignedJson.toString());
+            runner.runPython("scripts/align.py", audio.toString(), textJson.toString(), alignedJson.toString());
         }
         AssSync.sync(text, alignedJson);
     }
