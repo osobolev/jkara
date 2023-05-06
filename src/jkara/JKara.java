@@ -17,10 +17,9 @@ public final class JKara {
             System.exit(1);
             return;
         }
-        Path ffmpeg = Path.of("ffmpeg").toAbsolutePath(); // todo
 
         try {
-            KaraPipe pipe = new KaraPipe(ffmpeg);
+            KaraPipe pipe = new KaraPipe(null);
             if (cmd.url != null) {
                 pipe.downloadYoutube(cmd.url, cmd.audio);
             }
