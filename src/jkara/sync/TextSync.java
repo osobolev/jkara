@@ -29,7 +29,7 @@ public final class TextSync {
         for (CWS ch : fastChars) {
             Integer segment = ch.segment;
             if (segment == null)
-                return null;
+                continue;
             segments.add(segment);
         }
         if (segments.size() == 1)
