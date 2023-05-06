@@ -22,7 +22,7 @@ public final class JKara {
             if (cmd.url != null) {
                 pipe.downloadYoutube(cmd.url, cmd.audio);
             }
-            pipe.makeKaraoke(cmd.audio, cmd.language, cmd.text, cmd.dir);
+            pipe.makeKaraoke(cmd.audio, cmd.shifts, cmd.language, cmd.text, cmd.dir);
         } catch (SyncException ex) {
             System.err.println(ex.getMessage());
             System.err.printf("Please fix %s manually%n", ex.fastJson);

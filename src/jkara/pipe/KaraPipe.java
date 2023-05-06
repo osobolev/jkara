@@ -58,7 +58,7 @@ public final class KaraPipe {
      * aligned.json + text.txt -> AssSync -> ass file
      * no_vocals.wav + ass file -> ffmpeg -> karaoke.mp4
      */
-    public void makeKaraoke(Path audio, String maybeLanguage, Path userText, Path workDir) throws IOException, InterruptedException, SyncException {
+    public void makeKaraoke(Path audio, String maybeShifts, String maybeLanguage, Path userText, Path workDir) throws IOException, InterruptedException, SyncException {
         Files.createDirectories(workDir);
         Stages stages = new Stages(workDir);
 
@@ -70,7 +70,7 @@ public final class KaraPipe {
         StageFile noVocals = stages.file(demucsDir + "/no_vocals.wav");
         if (vocals.isModified() || noVocals.isModified()) {
             log("Separating vocals and instrumental...");
-            String shifts = "0"; // todo: ???
+            String shifts = maybeShifts == null ? "1" : maybeShifts;
             runner.runExe(
                 "demucs",
                 "--two-stems=vocals",

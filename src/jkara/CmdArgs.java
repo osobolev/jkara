@@ -13,14 +13,16 @@ final class CmdArgs {
     final Path dir;
     final String url;
     final Path audio;
+    final String shifts;
     final String language;
     final Path text;
 
-    private CmdArgs(Path rootDir, Path dir, String url, Path audio, String language, Path text) {
+    private CmdArgs(Path rootDir, Path dir, String url, Path audio, String shifts, String language, Path text) {
         this.rootDir = rootDir;
         this.dir = dir;
         this.url = url;
         this.audio = audio;
+        this.shifts = shifts;
         this.language = language;
         this.text = text;
     }
@@ -53,6 +55,7 @@ final class CmdArgs {
         String dirArg = null;
         String fileArg = null;
         String langArg = null;
+        String shiftsArg = null;
         for (int i = 0; i < args.length; ) {
             String arg = args[i];
             if (arg.startsWith("-") && i + 1 < args.length) {
@@ -62,6 +65,7 @@ final class CmdArgs {
                 case "-d" -> dirArg = value;
                 case "-f" -> fileArg = value;
                 case "-l" -> langArg = value;
+                case "-s" -> shiftsArg = value;
                 default -> error("Unexpected option " + arg);
                 }
                 i += 2;
@@ -108,7 +112,7 @@ final class CmdArgs {
             }
         }
         Path rootDir = rootDirArg == null ? Path.of(".") : Path.of(rootDirArg);
-        return new CmdArgs(rootDir, dir, url, audio, langArg, text);
+        return new CmdArgs(rootDir, dir, url, audio, shiftsArg, langArg, text);
     }
 
     static CmdArgs parse(String[] args) {
