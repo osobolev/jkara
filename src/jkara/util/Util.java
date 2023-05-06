@@ -16,4 +16,9 @@ public final class Util {
         long hours = totalMins / 60;
         return String.format(Locale.ROOT, "%s:%02d:%05.2f", hours, mins, secs);
     }
+
+    public static void appendK(StringBuilder buf, double len) {
+        long k = Math.round(len * 100);
+        buf.append(String.format("{\\k%s}", k));
+    }
 }

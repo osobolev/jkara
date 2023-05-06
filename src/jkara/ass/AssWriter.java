@@ -41,8 +41,7 @@ final class AssWriter {
     }
 
     private static void append(StringBuilder buf, double start, double end) {
-        long k = Math.round((end - start) * 100);
-        buf.append(String.format("{\\k%s}", k));
+        Util.appendK(buf, end - start);
     }
 
     private static String assLine(List<CSegment> line) {
