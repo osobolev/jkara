@@ -13,7 +13,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.*;
@@ -137,16 +136,5 @@ public final class TextSync {
         try (Writer w = textJson.open()) {
             root.write(w, 2, 0);
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        Path real = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
-        Path fast = Path.of("C:\\home\\projects\\my\\kara\\work\\_fast.json");
-//        Path real = Path.of("C:\\Downloads\\kara\\war\\text.txt");
-//        Path fast = Path.of("C:\\Downloads\\kara\\war\\fast.json");
-
-        StringWriter sw = new StringWriter();
-        sync(real, fast, () -> sw);
-        System.out.println(sw);
     }
 }

@@ -47,12 +47,4 @@ public final class AssSync {
             ia++;
         }
     }
-
-    public static void main(String[] args) throws IOException {
-        Path text = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
-        Path aligned = Path.of("C:\\home\\projects\\my\\kara\\work\\aligned.json");
-//        Path text = Path.of("C:\\Downloads\\kara\\war\\text.txt");
-//        Path aligned = Path.of("C:\\Downloads\\kara\\war\\aligned.json");
-        sync(text, aligned);
-    }
 }
