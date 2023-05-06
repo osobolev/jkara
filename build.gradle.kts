@@ -45,6 +45,12 @@ tasks.jar {
     }
 }
 
+tasks.named("clean").configure {
+    doLast {
+        project.delete("$rootDir/distr")
+    }
+}
+
 tasks.register("distr", Copy::class) {
     from(configurations.runtimeClasspath)
     from(tasks.jar)
