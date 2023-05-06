@@ -11,8 +11,8 @@ public final class AssSyncTest {
 //        Path aligned = Path.of("C:\\home\\projects\\my\\kara\\work\\aligned.json");
 //        Path text = Path.of("C:\\Downloads\\kara\\war\\text.txt");
 //        Path aligned = Path.of("C:\\Downloads\\kara\\war\\aligned.json");
-        Path text = Path.of("C:\\home\\projects\\my\\jkara\\work\\selfmachine.txt");
-        Path aligned = Path.of("C:\\home\\projects\\my\\jkara\\work\\aligned.json");
+        Path text = Path.of("C:\\home\\projects\\my\\jkara\\work\\rammstein\\text.txt");
+        Path aligned = Path.of("C:\\home\\projects\\my\\jkara\\work\\rammstein\\aligned.json");
 
         StringWriter sw = new StringWriter();
         AssSync.sync(text, aligned, () -> sw);

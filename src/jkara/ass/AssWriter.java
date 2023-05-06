@@ -1,12 +1,12 @@
 package jkara.ass;
 
 import jkara.util.OutputFactory;
+import jkara.util.Util;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 final class AssWriter {
 
@@ -38,15 +38,6 @@ final class AssWriter {
             line.add(text.chars[i]);
         }
         return lines;
-    }
-
-    private static String formatTimestamp(double ts) {
-        long totalSecs = (long) ts;
-        double secs = totalSecs % 60 + (ts - totalSecs);
-        long totalMins = totalSecs / 60;
-        long mins = totalMins % 60;
-        long hours = totalMins / 60;
-        return String.format(Locale.ROOT, "%s:%02d:%05.2f", hours, mins, secs);
     }
 
     private static void append(StringBuilder buf, double start, double end) {
@@ -103,7 +94,7 @@ final class AssWriter {
         }
         return String.format(
             "Dialogue: 0,%s,%s,Default,,0,0,0,,%s",
-            formatTimestamp(minStart), formatTimestamp(maxEnd), buf
+            Util.formatTimestamp(minStart), Util.formatTimestamp(maxEnd), buf
         );
     }
 
