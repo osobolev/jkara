@@ -6,8 +6,8 @@ import com.github.difflib.algorithm.myers.MeyersDiff;
 import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Chunk;
 import com.github.difflib.patch.Patch;
-import jkara.OutputFactory;
-import jkara.Util;
+import jkara.util.OutputFactory;
+import jkara.util.Util;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

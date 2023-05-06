@@ -1,7 +1,7 @@
 package jkara.ass;
 
-import jkara.OutputFactory;
-import jkara.Util;
+import jkara.util.OutputFactory;
+import jkara.util.Util;
 
 import java.io.IOException;
 import java.nio.file.Path;

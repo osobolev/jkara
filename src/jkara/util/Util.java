@@ -1,4 +1,4 @@
-package jkara;
+package jkara.util;
 
 public final class Util {
 

@@ -1,6 +1,6 @@
 package jkara.ass;
 
-import jkara.OutputFactory;
+import jkara.util.OutputFactory;
 
 import java.io.IOException;
 import java.io.PrintWriter;

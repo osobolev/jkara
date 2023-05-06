@@ -1,6 +1,6 @@
 package jkara.sync;
 
-import jkara.Util;
+import jkara.util.Util;
 
 import java.util.List;
 import java.util.stream.Collectors;
