@@ -35,8 +35,8 @@ final class CmdArgs {
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     private static void help(String error) {
         System.out.println("Usage:");
-        System.out.println("    jkara [-l language] [-d dir] [-f file] URL text");
-        System.out.println("    jkara [-l language] [-d dir] audio text");
+        System.out.println("    jkara [-l language] [-d dir] [-f file] URL [text]");
+        System.out.println("    jkara [-l language] [-d dir] audio [text]");
         if (error != null) {
             System.out.println();
             System.out.println(error);
@@ -70,13 +70,18 @@ final class CmdArgs {
                 i++;
             }
         }
-        if (positionalArgs.size() != 2) {
-            return error("Must be two arguments: <audio|URL> <text>");
+        if (positionalArgs.size() != 1 && positionalArgs.size() != 2) {
+            return error("Must have one (audio) or two (audio+text) positional arguments");
         }
         String urlOrFile = positionalArgs.get(0);
-        Path text = Path.of(positionalArgs.get(1));
-        if (!Files.exists(text)) {
-            return error(String.format("File '%s' does not exist", text));
+        Path text;
+        if (positionalArgs.size() > 1) {
+            text = Path.of(positionalArgs.get(1));
+            if (!Files.exists(text)) {
+                return error(String.format("File '%s' does not exist", text));
+            }
+        } else {
+            text = null;
         }
         Path dir = dirArg == null ? Path.of(".") : Path.of(dirArg);
         boolean isURL;
@@ -107,10 +112,6 @@ final class CmdArgs {
     }
 
     static CmdArgs parse(String[] args) {
-        if (args.length <= 0) {
-            help(null);
-            return null;
-        }
         try {
             return doParse(args);
         } catch (ArgException ex) {
