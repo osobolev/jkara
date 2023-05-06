@@ -63,7 +63,8 @@ public final class KaraPipe {
         Path fastJson = dir.resolve("fast.json");
         if (!Files.exists(fastJson)) {
             System.out.println("Transcribing vocals...");
-            runner.runPython("scripts/transcribe.py", vocals.toString(), fastJson.toString());
+            String language = "en"; // todo
+            runner.runPython("scripts/transcribe.py", vocals.toString(), fastJson.toString(), language);
         }
         Path textJson = dir.resolve("text.json");
         if (!Files.exists(textJson)) {
