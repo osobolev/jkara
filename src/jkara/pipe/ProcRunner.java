@@ -17,6 +17,18 @@ final class ProcRunner {
         this.ffmpeg = ffmpeg;
     }
 
+    private static void capture(InputStream is, OutputStream os) {
+        Thread thread = new Thread(() -> {
+            try {
+                is.transferTo(os);
+            } catch (IOException ex) {
+                // ignore
+            }
+        });
+        thread.start();
+    }
+
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
     void runCommand(String what, List<String> args) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(args);
         String path = pb.environment().get("PATH");
@@ -37,14 +49,10 @@ final class ProcRunner {
         runCommand("script " + script, list);
     }
 
-    private static void capture(InputStream is, OutputStream os) {
-        Thread thread = new Thread(() -> {
-            try {
-                is.transferTo(os);
-            } catch (IOException ex) {
-                // ignore
-            }
-        });
-        thread.start();
+    void runFFMPEG(String... args) throws IOException, InterruptedException {
+        List<String> list = new ArrayList<>();
+        list.add(ffmpeg.resolve("ffmpeg").toString());
+        list.addAll(Arrays.asList(args));
+        runCommand("ffmpeg", list);
     }
 }
