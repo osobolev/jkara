@@ -1,6 +1,7 @@
 package jkara.pipe;
 
 import jkara.ass.AssSync;
+import jkara.sync.SyncException;
 import jkara.sync.TextSync;
 
 import java.io.IOException;
@@ -55,7 +56,7 @@ public final class KaraPipe {
      * aligned.json + text.txt -> AssSync -> ass file
      * no_vocals.wav + ass file -> ffmpeg -> karaoke.mp4
      */
-    public void makeKaraoke(Path audio, String maybeLanguage, Path text, Path workDir) throws IOException, InterruptedException {
+    public void makeKaraoke(Path audio, String maybeLanguage, Path text, Path workDir) throws IOException, InterruptedException, SyncException {
         Files.createDirectories(workDir);
 
         String audioName = audio.getFileName().toString();

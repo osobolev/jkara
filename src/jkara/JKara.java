@@ -1,6 +1,7 @@
 package jkara;
 
 import jkara.pipe.KaraPipe;
+import jkara.sync.SyncException;
 
 public final class JKara {
 
@@ -22,6 +23,9 @@ public final class JKara {
                 pipe.downloadYoutube(cmd.url, cmd.audio);
             }
             pipe.makeKaraoke(cmd.audio, cmd.language, cmd.text, cmd.dir);
+        } catch (SyncException ex) {
+            System.err.println(ex.getMessage());
+            System.exit(1);
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
             System.exit(1);

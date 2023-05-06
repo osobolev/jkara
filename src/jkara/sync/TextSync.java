@@ -39,7 +39,7 @@ public final class TextSync {
         }
     }
 
-    static void align(List<CWS> real, List<CWS> fast) {
+    static void align(List<CWS> real, List<CWS> fast) throws SyncException {
         DiffAlgorithmFactory factory = MeyersDiff.factory();
         Patch<CWS> diff = DiffUtils.diff(fast, real, factory.create((cw1, cw2) -> cw1.ch == cw2.ch), null, true);
         for (AbstractDelta<CWS> delta : diff.getDeltas()) {
@@ -85,9 +85,8 @@ public final class TextSync {
         for (CWS ch : real) {
             if (ch.segment == null) {
                 if (ch.ch != ' ') {
-                    // todo: error
-                    System.out.println(ch);
-                    throw new IllegalStateException();
+                    // todo: error text with details
+                    throw new SyncException("Cannot sync!!!");
                 }
             }
         }
@@ -113,7 +112,7 @@ public final class TextSync {
         return buf.toString();
     }
 
-    public static void sync(Path text, Path fastJson, OutputFactory textJson) throws IOException {
+    public static void sync(Path text, Path fastJson, OutputFactory textJson) throws IOException, SyncException {
         RealText real = RealText.read(text);
         FastResult fast = FastResult.read(fastJson);
 
