@@ -37,8 +37,11 @@ final class CmdArgs {
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     private static void help(String error) {
         System.out.println("Usage:");
-        System.out.println("    jkara [-l language] [-d dir] [-f file] URL [text]");
-        System.out.println("    jkara [-l language] [-d dir] audio [text]");
+        System.out.println("    jkara [-l language] [-s shifts] [-d dir] [-f file] URL [text]");
+        System.out.println("    jkara [-l language] [-s shifts] [-d dir] audio [text]");
+        System.out.println("where");
+        System.out.println("    language: en/de/fr/...");
+        System.out.println("    shifts: used in vocals separation (more -> better quality/slower)");
         if (error != null) {
             System.out.println();
             System.out.println(error);
