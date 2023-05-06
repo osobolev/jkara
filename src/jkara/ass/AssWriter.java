@@ -49,17 +49,16 @@ final class AssWriter {
         return String.format(Locale.ROOT, "%s:%02d:%05.2f", hours, mins, secs);
     }
 
+    private static void append(StringBuilder buf, double start, double end) {
+        long k = Math.round((end - start) * 100);
+        buf.append(String.format("{\\k%s}", k));
+    }
+
     private static String assLine(List<CSegment> line) {
         double minStart = Double.NaN;
         double maxEnd = Double.NaN;
-        StringBuilder buf = new StringBuilder();
         for (CSegment ch : line) {
             Timestamps ts = ch.timestamps;
-            if (ts != null) {
-                long k = Math.round((ts.end() - ts.start()) * 100);
-                buf.append(String.format("{\\k%s}", k));
-            }
-            buf.append(ch.ch);
             if (ts == null)
                 continue;
             if (Double.isNaN(minStart) || ts.start() < minStart) {
@@ -71,6 +70,36 @@ final class AssWriter {
         }
         if (Double.isNaN(minStart) || Double.isNaN(maxEnd))
             return null;
+        StringBuilder buf = new StringBuilder();
+        int i = 0;
+        while (i < line.size()) {
+            CSegment ch = line.get(i);
+            Timestamps ts = ch.timestamps;
+            if (ts == null) {
+                if (i > 0) {
+                    double prevEnd = line.get(i - 1).timestamps.end();
+                    StringBuilder spaces = new StringBuilder();
+                    double end = maxEnd;
+                    while (i < line.size()) {
+                        CSegment chi = line.get(i);
+                        if (chi.timestamps != null) {
+                            end = chi.timestamps.start();
+                            break;
+                        }
+                        spaces.append(chi.ch);
+                        i++;
+                    }
+                    append(buf, prevEnd, end);
+                    buf.append(spaces);
+                } else {
+                    buf.append(ch.ch);
+                }
+            } else {
+                append(buf, ts.start(), ts.end());
+                buf.append(ch.ch);
+                i++;
+            }
+        }
         return String.format(
             "Dialogue: 0,%s,%s,Default,,0,0,0,,%s",
             formatTimestamp(minStart), formatTimestamp(maxEnd), buf
