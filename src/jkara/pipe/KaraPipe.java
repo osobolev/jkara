@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@SuppressWarnings("UseOfSystemOutOrSystemErr")
 public final class KaraPipe {
 
     private static String escapeFilter(String path) {
@@ -32,6 +33,15 @@ public final class KaraPipe {
      * aligned.json + text.txt -> AssSync -> ass file
      */
     public static void main(String[] args) throws IOException, InterruptedException {
+        Path audio = Path.of("C:\\home\\projects\\my\\kara\\work\\PjdEDOIai8Y.mp3");
+        Path text = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
+
+        Path ffmpeg = Path.of("ffmpeg").toAbsolutePath(); // todo
+        ProcRunner runner = new ProcRunner(ffmpeg);
+
+        Path dir = Path.of("work"); // todo
+        Files.createDirectories(dir);
+
         // todo: run youtube-download
         // todo: run demucs
 
@@ -39,25 +49,23 @@ public final class KaraPipe {
         Path noVocals = Path.of("C:\\home\\projects\\my\\kara\\work\\separated\\htdemucs\\PjdEDOIai8Y\\no_vocals.wav");
         Path text = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
 
-        ProcRunner runner = new ProcRunner(Path.of("ffmpeg").toAbsolutePath());
-
-        Path fastJson = Path.of("C:\\home\\projects\\my\\kara\\work\\_fast.json");
+        Path fastJson = dir.resolve("fast.json");
         if (!Files.exists(fastJson)) {
             runner.runPython("scripts/transcribe.py", vocals.toString(), fastJson.toString());
         }
-        Path textJson = Path.of("C:\\home\\projects\\my\\kara\\work\\_text.json");
+        Path textJson = dir.resolve("text.json");
         if (!Files.exists(textJson)) {
             TextSync.sync(text, fastJson, () -> Files.newBufferedWriter(textJson));
         }
-        Path alignedJson = Path.of("C:\\home\\projects\\my\\kara\\work\\_aligned.json");
+        Path alignedJson = dir.resolve("aligned.json");
         if (!Files.exists(alignedJson)) {
             runner.runPython("scripts/align.py", vocals.toString(), textJson.toString(), alignedJson.toString());
         }
-        Path ass = Path.of("C:\\home\\projects\\my\\kara\\work\\_subs.ass");
+        Path ass = dir.resolve("subs.ass");
         if (!Files.exists(ass)) {
             AssSync.sync(text, alignedJson, () -> Files.newBufferedWriter(ass));
         }
-        Path karaoke = Path.of("C:\\home\\projects\\my\\kara\\work\\_karaoke.mp4");
+        Path karaoke = dir.resolve("karaoke.mp4");
         if (!Files.exists(karaoke)) {
             Path tmpDuration = Files.createTempFile("duration", ".txt");
             String duration;
