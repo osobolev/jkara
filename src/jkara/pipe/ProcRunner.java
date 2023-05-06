@@ -53,11 +53,15 @@ final class ProcRunner {
         runCommand("script " + script, list);
     }
 
-    void runExe(String exe, String... args) throws IOException, InterruptedException {
+    void runExe(String exe, List<String> args) throws IOException, InterruptedException {
         List<String> list = new ArrayList<>();
         list.add(exe);
-        list.addAll(Arrays.asList(args));
+        list.addAll(args);
         runCommand(exe, list);
+    }
+
+    void runExe(String exe, String... args) throws IOException, InterruptedException {
+        runExe(exe, Arrays.asList(args));
     }
 
     void runFFMPEG(String... args) throws IOException, InterruptedException {

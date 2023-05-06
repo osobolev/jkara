@@ -14,7 +14,10 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public final class TextSync {
 
@@ -63,7 +66,7 @@ public final class TextSync {
                 if (position > 0 && position < fast.size()) {
                     CWS before = fast.get(position - 1);
                     CWS after = fast.get(position);
-                    segment = segment(Arrays.asList(before, after));
+                    segment = segment(List.of(before, after));
                 } else {
                     segment = null;
                 }

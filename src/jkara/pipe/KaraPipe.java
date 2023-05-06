@@ -51,6 +51,12 @@ public final class KaraPipe {
         );
     }
 
+    private static String nameWithoutExtension(Path path) {
+        String name = path.getFileName().toString();
+        int dot = name.lastIndexOf('.');
+        return dot < 0 ? name : name.substring(0, dot);
+    }
+
     /**
      * Pipeline:
      * audio.mp3 -> demucs -> vocals.wav + no_vocals.wav
@@ -65,9 +71,7 @@ public final class KaraPipe {
         Files.createDirectories(workDir);
         Stages stages = new Stages(workDir);
 
-        String audioName = audio.getFileName().toString();
-        int dot = audioName.lastIndexOf('.');
-        String id = dot < 0 ? audioName : audioName.substring(0, dot);
+        String id = nameWithoutExtension(audio);
         String demucsDir = "htdemucs/" + id;
         StageFile vocals = stages.file(demucsDir + "/vocals.wav");
         StageFile noVocals = stages.file(demucsDir + "/no_vocals.wav");
