@@ -2,6 +2,8 @@ package jkara.ass;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.stream.Collectors;
 
 final class RawText {
@@ -20,9 +22,9 @@ final class RawText {
         return chars[i].ch;
     }
 
-    static RawText read(InputFactory factory) throws IOException {
+    static RawText read(Path file) throws IOException {
         String str;
-        try (BufferedReader rdr = factory.open()) {
+        try (BufferedReader rdr = Files.newBufferedReader(file)) {
             str = rdr.lines().collect(Collectors.joining("\n"));
         }
         CSegment[] chars = new CSegment[str.length()];

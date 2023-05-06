@@ -1,13 +1,18 @@
 package jkara.sync;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.stream.Collectors;
 
 public final class FastText {
 
-    public static String textFromFast(Path file) throws IOException {
-        FastResult fast = FastResult.read(file);
-        return fast.segments.stream().map(Segment::text).collect(Collectors.joining("\n"));
+    public static void textFromFast(Path fastJson, Path text) throws IOException {
+        FastResult fast = FastResult.read(fastJson);
+        try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(text))) {
+            for (Segment segment : fast.segments) {
+                pw.println(segment.text().trim());
+            }
+        }
     }
 }

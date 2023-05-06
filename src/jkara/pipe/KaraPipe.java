@@ -1,14 +1,11 @@
 package jkara.pipe;
 
 import jkara.ass.AssSync;
-import jkara.ass.InputFactory;
 import jkara.sync.FastText;
 import jkara.sync.SyncException;
 import jkara.sync.TextSync;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -61,7 +58,7 @@ public final class KaraPipe {
      * aligned.json + text.txt -> AssSync -> ass file
      * no_vocals.wav + ass file -> ffmpeg -> karaoke.mp4
      */
-    public void makeKaraoke(Path audio, String maybeLanguage, Path text, Path workDir) throws IOException, InterruptedException, SyncException {
+    public void makeKaraoke(Path audio, String maybeLanguage, Path userText, Path workDir) throws IOException, InterruptedException, SyncException {
         Files.createDirectories(workDir);
 
         String audioName = audio.getFileName().toString();
@@ -88,15 +85,20 @@ public final class KaraPipe {
             String language = maybeLanguage == null ? "-" : maybeLanguage;
             runner.runPython("scripts/transcribe.py", vocals.toString(), fastJson.toString(), language);
         }
-        Path textJson;
-        if (text != null) {
-            textJson = workDir.resolve("text.json");
-            if (!Files.exists(textJson)) {
-                log("Synchronizing transcription with text...");
-                TextSync.sync(text, fastJson, () -> Files.newBufferedWriter(textJson));
-            }
+        Path text;
+        if (userText != null) {
+            text = userText;
         } else {
-            textJson = fastJson;
+            text = workDir.resolve("text.txt");
+            if (!Files.exists(text)) {
+                log("Saving transcribed text (you can edit it)...");
+                FastText.textFromFast(fastJson, text);
+            }
+        }
+        Path textJson = workDir.resolve("text.json");
+        if (!Files.exists(textJson)) {
+            log("Synchronizing transcription with text...");
+            TextSync.sync(text, fastJson, () -> Files.newBufferedWriter(textJson));
         }
         Path alignedJson = workDir.resolve("aligned.json");
         if (!Files.exists(alignedJson)) {
@@ -106,14 +108,7 @@ public final class KaraPipe {
         Path ass = workDir.resolve("subs.ass");
         if (!Files.exists(ass)) {
             log("Creating subtitles...");
-            InputFactory textInput;
-            if (text != null) {
-                textInput = () -> Files.newBufferedReader(text);
-            } else {
-                String fastText = FastText.textFromFast(fastJson);
-                textInput = () -> new BufferedReader(new StringReader(fastText));
-            }
-            AssSync.sync(textInput, alignedJson, () -> Files.newBufferedWriter(ass));
+            AssSync.sync(text, alignedJson, () -> Files.newBufferedWriter(ass));
         }
         Path karaoke = workDir.resolve("karaoke.mp4");
         if (!Files.exists(karaoke)) {

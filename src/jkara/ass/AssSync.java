@@ -8,7 +8,7 @@ import java.nio.file.Path;
 
 public final class AssSync {
 
-    public static void sync(InputFactory text, Path alignedJson, OutputFactory factory) throws IOException {
+    public static void sync(Path text, Path alignedJson, OutputFactory factory) throws IOException {
         RawText raw = RawText.read(text);
         Aligned aligned = Aligned.read(alignedJson);
         int ir = 0;
