@@ -40,12 +40,13 @@ public final class KaraPipe {
      * no_vocals.wav + ass file -> ffmpeg -> karaoke.mp4
      */
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    public void makeKaraoke(Path audio, Path text) throws IOException, InterruptedException {
-        Path dir = Path.of("work"); // todo
-        Files.createDirectories(dir);
+    public void makeKaraoke(Path audio, String maybeLanguage, Path text, Path workDir) throws IOException, InterruptedException {
+        Files.createDirectories(workDir);
 
-        String id = "PjdEDOIai8Y"; // todo
-        Path demucsDir = dir.resolve("htdemucs/" + id);
+        String audioName = audio.getFileName().toString();
+        int dot = audioName.lastIndexOf('.');
+        String id = dot < 0 ? audioName : audioName.substring(0, dot);
+        Path demucsDir = workDir.resolve("htdemucs/" + id);
         Path vocals = demucsDir.resolve("vocals.wav");
         Path noVocals = demucsDir.resolve("no_vocals.wav");
         if (!Files.exists(vocals) || !Files.exists(noVocals)) {
@@ -55,33 +56,33 @@ public final class KaraPipe {
                 "demucs",
                 "--two-stems=vocals",
                 "--shifts=" + shifts,
-                "--out=" + dir,
+                "--out=" + workDir,
                 audio.toString()
             );
         }
 
-        Path fastJson = dir.resolve("fast.json");
+        Path fastJson = workDir.resolve("fast.json");
         if (!Files.exists(fastJson)) {
             System.out.println("Transcribing vocals...");
-            String language = "en"; // todo
+            String language = maybeLanguage == null ? "-" : maybeLanguage;
             runner.runPython("scripts/transcribe.py", vocals.toString(), fastJson.toString(), language);
         }
-        Path textJson = dir.resolve("text.json");
+        Path textJson = workDir.resolve("text.json");
         if (!Files.exists(textJson)) {
             System.out.println("Synchronizing transcription with text...");
             TextSync.sync(text, fastJson, () -> Files.newBufferedWriter(textJson));
         }
-        Path alignedJson = dir.resolve("aligned.json");
+        Path alignedJson = workDir.resolve("aligned.json");
         if (!Files.exists(alignedJson)) {
             System.out.println("Performing alignment...");
             runner.runPython("scripts/align.py", vocals.toString(), textJson.toString(), alignedJson.toString());
         }
-        Path ass = dir.resolve("subs.ass");
+        Path ass = workDir.resolve("subs.ass");
         if (!Files.exists(ass)) {
             System.out.println("Creating subtitles...");
             AssSync.sync(text, alignedJson, () -> Files.newBufferedWriter(ass));
         }
-        Path karaoke = dir.resolve("karaoke.mp4");
+        Path karaoke = workDir.resolve("karaoke.mp4");
         if (!Files.exists(karaoke)) {
             System.out.println("Building karaoke video...");
             Path tmpDuration = Files.createTempFile("duration", ".txt");
@@ -119,9 +120,10 @@ public final class KaraPipe {
     public static void main(String[] args) throws IOException, InterruptedException {
         Path audio = Path.of("C:\\home\\projects\\my\\kara\\work\\PjdEDOIai8Y.mp3");
         Path text = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
+        Path workDir = Path.of("work"); // todo
 
         Path ffmpeg = Path.of("ffmpeg").toAbsolutePath(); // todo
         KaraPipe pipe = new KaraPipe(ffmpeg);
-        pipe.makeKaraoke(audio, text);
+        pipe.makeKaraoke(audio, "en", text, workDir);
     }
 }
