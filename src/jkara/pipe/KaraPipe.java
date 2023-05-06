@@ -105,5 +105,6 @@ public final class KaraPipe {
                 karaoke.toString()
             );
         }
+        System.out.println("Done: " + karaoke);
     }
 }
