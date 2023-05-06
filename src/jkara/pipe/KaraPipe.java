@@ -60,14 +60,15 @@ public final class KaraPipe {
      */
     public void makeKaraoke(Path audio, String maybeLanguage, Path userText, Path workDir) throws IOException, InterruptedException, SyncException {
         Files.createDirectories(workDir);
+        Stages stages = new Stages(workDir);
 
         String audioName = audio.getFileName().toString();
         int dot = audioName.lastIndexOf('.');
         String id = dot < 0 ? audioName : audioName.substring(0, dot);
-        Path demucsDir = workDir.resolve("htdemucs/" + id);
-        Path vocals = demucsDir.resolve("vocals.wav");
-        Path noVocals = demucsDir.resolve("no_vocals.wav");
-        if (!Files.exists(vocals) || !Files.exists(noVocals)) {
+        String demucsDir = "htdemucs/" + id;
+        StageFile vocals = stages.file(demucsDir + "/vocals.wav");
+        StageFile noVocals = stages.file(demucsDir + "/no_vocals.wav");
+        if (vocals.isModified() || noVocals.isModified()) {
             log("Separating vocals and instrumental...");
             String shifts = "0"; // todo: ???
             runner.runExe(
@@ -77,46 +78,48 @@ public final class KaraPipe {
                 "--out=" + workDir,
                 audio.toString()
             );
+            vocals.output();
+            noVocals.output();
         }
 
-        Path fastJson = workDir.resolve("fast.json");
-        if (!Files.exists(fastJson)) {
+        StageFile fastJson = stages.file("fast.json", vocals);
+        if (fastJson.isModified()) {
             log("Transcribing vocals...");
             String language = maybeLanguage == null ? "-" : maybeLanguage;
-            runner.runPython("scripts/transcribe.py", vocals.toString(), fastJson.toString(), language);
+            runner.runPython("scripts/transcribe.py", vocals.input().toString(), fastJson.output().toString(), language);
         }
-        Path text;
+        StageFile text;
         if (userText != null) {
-            text = userText;
+            text = new StageFile(userText);
         } else {
-            text = workDir.resolve("text.txt");
-            if (!Files.exists(text)) {
+            text = stages.file("text.txt");
+            if (text.isModified()) {
                 log("Saving transcribed text (you can edit it)...");
-                FastText.textFromFast(fastJson, text);
+                FastText.textFromFast(fastJson.input(), text.output());
             }
         }
-        Path textJson = workDir.resolve("text.json");
-        if (!Files.exists(textJson)) {
+        StageFile textJson = stages.file("text.json", text, fastJson);
+        if (textJson.isModified()) {
             log("Synchronizing transcription with text...");
-            TextSync.sync(text, fastJson, () -> Files.newBufferedWriter(textJson));
+            TextSync.sync(text.input(), fastJson.input(), () -> Files.newBufferedWriter(textJson.output()));
         }
-        Path alignedJson = workDir.resolve("aligned.json");
-        if (!Files.exists(alignedJson)) {
+        StageFile alignedJson = stages.file("aligned.json", vocals, textJson);
+        if (alignedJson.isModified()) {
             log("Performing alignment...");
-            runner.runPython("scripts/align.py", vocals.toString(), textJson.toString(), alignedJson.toString());
+            runner.runPython("scripts/align.py", vocals.input().toString(), textJson.input().toString(), alignedJson.output().toString());
         }
-        Path ass = workDir.resolve("subs.ass");
-        if (!Files.exists(ass)) {
+        StageFile ass = stages.file("subs.ass", text, alignedJson);
+        if (ass.isModified()) {
             log("Creating subtitles...");
-            AssSync.sync(text, alignedJson, () -> Files.newBufferedWriter(ass));
+            AssSync.sync(text.input(), alignedJson.input(), () -> Files.newBufferedWriter(ass.output()));
         }
-        Path karaoke = workDir.resolve("karaoke.mp4");
-        if (!Files.exists(karaoke)) {
+        StageFile karaoke = stages.file("karaoke.mp4", noVocals, ass);
+        if (karaoke.isModified()) {
             log("Building karaoke video...");
             Path tmpDuration = Files.createTempFile("duration", ".txt");
             String duration;
             try {
-                runner.runPython("scripts/duration.py", noVocals.toString(), tmpDuration.toString());
+                runner.runPython("scripts/duration.py", noVocals.input().toString(), tmpDuration.toString());
                 duration = Files.readString(tmpDuration);
             } finally {
                 Files.deleteIfExists(tmpDuration);
@@ -126,15 +129,15 @@ public final class KaraPipe {
                 "-y",
                 "-f", "lavfi",
                 "-i", String.format("color=size=1280x720:duration=%s:rate=24:color=black", duration),
-                "-i", noVocals.toString(),
-                "-vf", "ass=" + escapeFilter(ass.toString()),
+                "-i", noVocals.input().toString(),
+                "-vf", "ass=" + escapeFilter(ass.input().toString()),
                 "-shortest",
                 "-c:v", "libx264",
                 "-c:a", "aac",
                 "-b:a", "192k",
-                karaoke.toString()
+                karaoke.output().toString()
             );
         }
-        log("Done: " + karaoke);
+        log("Done: " + karaoke.input());
     }
 }
