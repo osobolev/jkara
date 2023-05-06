@@ -35,7 +35,13 @@ public final class KaraPipe {
         return buf.toString();
     }
 
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
+    private static void log(String message) {
+        System.out.println(">>>>> " + message);
+    }
+
     public void downloadYoutube(String url, Path audio) throws IOException, InterruptedException {
+        log("Downloading from Youtube...");
         Files.createDirectories(audio.getParent());
         runner.runExe(
             "yt-dlp",
@@ -44,11 +50,6 @@ public final class KaraPipe {
             "--output", audio.toString(),
             url
         );
-    }
-
-    @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    private static void log(String message) {
-        System.out.println(">>>>> " + message);
     }
 
     /**
