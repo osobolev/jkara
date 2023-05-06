@@ -24,7 +24,7 @@ final class Aligned {
     }
 
     char get(int i) {
-        return list.get(i).ch();
+        return list.get(i).ch;
     }
 
     static Aligned read(Path file) throws IOException {
@@ -40,7 +40,7 @@ final class Aligned {
                     double start = cseg.getDouble("start");
                     double end = cseg.getDouble("end");
                     char ch = cseg.getString("char").charAt(0);
-                    buf.add(new CSegment(start, end, ch));
+                    buf.add(new CSegment(ch, Timestamps.create(start, end)));
                 }
             }
         }

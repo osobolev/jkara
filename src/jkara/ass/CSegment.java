@@ -1,8 +1,17 @@
 package jkara.ass;
 
-record CSegment(
-    double start,
-    double end,
-    char ch
-)
-{}
+final class CSegment {
+
+    final char ch;
+    Timestamps timestamps;
+
+    CSegment(char ch, Timestamps timestamps) {
+        this.ch = ch;
+        this.timestamps = timestamps;
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(ch);
+    }
+}

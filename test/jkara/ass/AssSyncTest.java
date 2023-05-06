@@ -1,6 +1,7 @@
 package jkara.ass;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Path;
 
 public final class AssSyncTest {
@@ -10,6 +11,9 @@ public final class AssSyncTest {
         Path aligned = Path.of("C:\\home\\projects\\my\\kara\\work\\aligned.json");
 //        Path text = Path.of("C:\\Downloads\\kara\\war\\text.txt");
 //        Path aligned = Path.of("C:\\Downloads\\kara\\war\\aligned.json");
-        AssSync.sync(text, aligned);
+
+        StringWriter sw = new StringWriter();
+        AssSync.sync(text, aligned, () -> sw);
+        System.out.println(sw);
     }
 }

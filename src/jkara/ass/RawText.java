@@ -8,20 +8,18 @@ import java.util.stream.Collectors;
 
 final class RawText {
 
-    private final String text;
-    final Timestamps[] timestamps;
+    final CSegment[] chars;
 
-    private RawText(String text) {
-        this.text = text;
-        this.timestamps = new Timestamps[text.length()];
+    private RawText(CSegment[] chars) {
+        this.chars = chars;
     }
 
     int size() {
-        return text.length();
+        return chars.length;
     }
 
     char get(int i) {
-        return text.charAt(i);
+        return chars[i].ch;
     }
 
     static RawText read(Path file) throws IOException {
@@ -29,6 +27,10 @@ final class RawText {
         try (BufferedReader rdr = Files.newBufferedReader(file)) {
             str = rdr.lines().collect(Collectors.joining("\n"));
         }
-        return new RawText(str);
+        CSegment[] chars = new CSegment[str.length()];
+        for (int i = 0; i < str.length(); i++) {
+            chars[i] = new CSegment(str.charAt(i), null);
+        }
+        return new RawText(chars);
     }
 }
