@@ -41,7 +41,7 @@ final class AssWriter {
     }
 
     private static String formatTimestamp(double ts) {
-        long totalSecs = Math.round(ts);
+        long totalSecs = (long) ts;
         double secs = totalSecs % 60 + (ts - totalSecs);
         long totalMins = totalSecs / 60;
         long mins = totalMins % 60;
