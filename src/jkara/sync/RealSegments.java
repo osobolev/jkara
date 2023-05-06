@@ -4,7 +4,6 @@ import jkara.Segment;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 final class RealSegments {
@@ -40,10 +39,10 @@ final class RealSegments {
         result.add(new Segment(fastSegment.start(), fastSegment.end(), origText));
     }
 
-    List<Segment> split(Map<CWI, Integer> realSegments) {
+    List<Segment> split() {
         for (int i = 0; i < real.list.size(); i++) {
             CWI ch = real.list.get(i);
-            Integer segment = realSegments.get(ch);
+            Integer segment = ch.segment;
             if (!Objects.equals(prevSegment, segment)) {
                 addChunk(i);
                 start = i;

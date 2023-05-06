@@ -37,12 +37,11 @@ final class FastResult {
                 double start = seg.getDouble("start");
                 double end = seg.getDouble("end");
                 String text = seg.getString("text");
-                int segmentIndex = segments.size();
                 segments.add(new Segment(start, end, text));
                 if (i > 0) {
-                    Normalizer.append(buf, " ", j -> null);
+                    Normalizer.append(buf, " ", null);
                 }
-                Normalizer.append(buf, text, j -> segmentIndex);
+                Normalizer.append(buf, text, i);
             }
         }
         Normalizer.finish(buf);

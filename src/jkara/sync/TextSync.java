@@ -15,21 +15,12 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.*;
 
-/**
- * Pipeline:
- * vocals.wav -> fast_whisper -> fast.json
- * text.txt + fast.json -> TextSync -> text.json
- * text.json -> whisperx -> aligned.json
- * aligned.json + text.txt -> time-enriched text => ass file
- */
 public final class TextSync {
-
-    private final Map<CWI, Integer> realSegments = new HashMap<>();
 
     private static Integer segment(Iterable<CWI> fastChars) {
         Set<Integer> segments = new HashSet<>();
         for (CWI ch : fastChars) {
-            Integer segment = ch.index();
+            Integer segment = ch.segment;
             if (segment == null)
                 return null;
             segments.add(segment);
@@ -39,17 +30,17 @@ public final class TextSync {
         return null;
     }
 
-    private void setSegment(Integer segment, Iterable<CWI> chars) {
+    private static void setSegment(Integer segment, Iterable<CWI> chars) {
         if (segment == null)
             return;
         for (CWI ch : chars) {
-            realSegments.put(ch, segment);
+            ch.segment = segment;
         }
     }
 
-    void align(List<CWI> real, List<CWI> fast) {
+    static void align(List<CWI> real, List<CWI> fast) {
         DiffAlgorithmFactory factory = MeyersDiff.factory();
-        Patch<CWI> diff = DiffUtils.diff(fast, real, factory.create((cw1, cw2) -> cw1.ch() == cw2.ch()), null, true);
+        Patch<CWI> diff = DiffUtils.diff(fast, real, factory.create((cw1, cw2) -> cw1.ch == cw2.ch), null, true);
         for (AbstractDelta<CWI> delta : diff.getDeltas()) {
             switch (delta.getType()) {
             case INSERT: {
@@ -82,26 +73,27 @@ public final class TextSync {
                 for (int i = 0; i < fastChunk.getLines().size(); i++) {
                     CWI ifast = fastChunk.getLines().get(i);
                     CWI ireal = realChunk.getLines().get(i);
-                    Integer segment = ifast.index();
+                    Integer segment = ifast.segment;
                     if (segment != null) {
-                        realSegments.put(ireal, segment);
+                        ireal.segment = segment;
                     }
                 }
             }
             }
         }
         for (CWI ch : real) {
-            Integer segment = realSegments.get(ch);
-            if (segment == null && ch.ch() != ' ') {
-                // todo: error
-                System.out.println(ch);
-                throw new IllegalStateException();
+            if (ch.segment == null) {
+                if (ch.ch != ' ') {
+                    // todo: error
+                    System.out.println(ch);
+                    throw new IllegalStateException();
+                }
             }
         }
     }
 
-    List<Segment> getResult(RealText real, FastResult fast) {
-        return new RealSegments(real, fast).split(realSegments);
+    private static List<Segment> getResult(RealText real, FastResult fast) {
+        return new RealSegments(real, fast).split();
     }
 
     private static String sanitize(String str) {

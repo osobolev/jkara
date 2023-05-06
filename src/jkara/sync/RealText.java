@@ -24,7 +24,7 @@ final class RealText {
             str = rdr.lines().collect(Collectors.joining("\n"));
         }
         List<CWI> buf = new ArrayList<>();
-        Normalizer.append(buf, str, j -> j);
+        Normalizer.append(buf, str, null);
         Normalizer.finish(buf);
         return new RealText(str, buf);
     }
