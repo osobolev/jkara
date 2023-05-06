@@ -67,7 +67,7 @@ final class ErrorContext {
     }
 
     private void syncError(Path file, String ctx) throws SyncException {
-        throw new SyncException(String.format("Cannot sync at %s in file %s", ctx, file), fastJson);
+        throw new SyncException(String.format("Cannot sync at %s in file %s", ctx, file.getFileName()), fastJson);
     }
 
     void fastError(int fastPosition) throws SyncException {

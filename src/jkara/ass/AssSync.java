@@ -33,7 +33,10 @@ public final class AssSync {
             char cr = raw.get(ir);
             CSegment ca = aligned.list.get(ia);
             if (!String.valueOf(ca.ch).equalsIgnoreCase(String.valueOf(cr)))
-                throw new IllegalStateException();
+                throw new IllegalStateException(String.format(
+                    "Unexpected misalignment between %s and %s (remove %s and repeat)",
+                    text.getFileName(), alignedJson.getFileName(), alignedJson
+                ));
 
             raw.chars[ir].timestamps = ca.timestamps;
             ir++;
