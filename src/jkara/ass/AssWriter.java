@@ -93,6 +93,7 @@ final class AssWriter {
                     buf.append(spaces);
                 } else {
                     buf.append(ch.ch);
+                    i++;
                 }
             } else {
                 append(buf, ts.start(), ts.end());
