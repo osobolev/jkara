@@ -64,6 +64,6 @@ final class AssLineParser {
         String text = line.substring(i);
         double start = parseTimestamp(fields[1]);
         double end = parseTimestamp(fields[2]);
-        return new AssLine(fields, start, end, text);
+        return AssLine.create(fields, start, end, text);
     }
 }

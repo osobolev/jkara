@@ -12,7 +12,7 @@ final class ParsedAss {
     final List<String> header;
     final List<AssLine> lines;
 
-    private ParsedAss(List<String> header, List<AssLine> lines) {
+    ParsedAss(List<String> header, List<AssLine> lines) {
         this.header = header;
         this.lines = lines;
     }
@@ -26,7 +26,7 @@ final class ParsedAss {
                 break;
         }
         while (i < lines.size()) {
-            String line = lines.get(i++).trim();
+            String line = lines.get(i).trim();
             if (line.startsWith("Dialogue"))
                 break;
             i++;
@@ -40,7 +40,6 @@ final class ParsedAss {
                 AssLine assLine = new AssLineParser(line).parse();
                 assLines.add(assLine);
             }
-            i++;
         }
         return new ParsedAss(lines.subList(0, firstEvent), assLines);
     }
