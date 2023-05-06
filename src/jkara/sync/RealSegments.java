@@ -26,7 +26,7 @@ final class RealSegments {
             return;
         StringBuilder buf = new StringBuilder();
         for (int i = start; i < to; i++) {
-            CWI ch = real.list.get(i);
+            CWS ch = real.list.get(i);
             buf.append(ch.ch);
         }
         String origText = buf.toString().trim();
@@ -36,7 +36,7 @@ final class RealSegments {
 
     List<Segment> split() {
         for (int i = 0; i < real.list.size(); i++) {
-            CWI ch = real.list.get(i);
+            CWS ch = real.list.get(i);
             Integer segment = ch.segment;
             if (!Objects.equals(prevSegment, segment)) {
                 addChunk(i);

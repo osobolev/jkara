@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 final class RealText {
 
-    final List<CWI> list;
+    final List<CWS> list;
 
-    private RealText(List<CWI> list) {
+    private RealText(List<CWS> list) {
         this.list = list;
     }
 
@@ -21,7 +21,7 @@ final class RealText {
         try (BufferedReader rdr = Files.newBufferedReader(file)) {
             str = rdr.lines().collect(Collectors.joining("\n"));
         }
-        List<CWI> buf = new ArrayList<>();
+        List<CWS> buf = new ArrayList<>();
         Normalizer.append(buf, str, null);
         Normalizer.finish(buf);
         return new RealText(buf);

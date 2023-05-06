@@ -14,18 +14,18 @@ import java.util.List;
 
 final class FastResult {
 
-    final List<CWI> list;
+    final List<CWS> list;
     final List<Segment> segments;
     final String language;
 
-    private FastResult(List<CWI> list, List<Segment> segments, String language) {
+    private FastResult(List<CWS> list, List<Segment> segments, String language) {
         this.list = list;
         this.segments = segments;
         this.language = language;
     }
 
     static FastResult read(Path file) throws IOException {
-        List<CWI> buf = new ArrayList<>();
+        List<CWS> buf = new ArrayList<>();
         List<Segment> segments = new ArrayList<>();
         String language;
         try (InputStream is = Files.newInputStream(file)) {

@@ -20,9 +20,9 @@ import java.util.*;
 
 public final class TextSync {
 
-    private static Integer segment(Iterable<CWI> fastChars) {
+    private static Integer segment(Iterable<CWS> fastChars) {
         Set<Integer> segments = new HashSet<>();
-        for (CWI ch : fastChars) {
+        for (CWS ch : fastChars) {
             Integer segment = ch.segment;
             if (segment == null)
                 return null;
@@ -33,27 +33,27 @@ public final class TextSync {
         return null;
     }
 
-    private static void setSegment(Integer segment, Iterable<CWI> chars) {
+    private static void setSegment(Integer segment, Iterable<CWS> chars) {
         if (segment == null)
             return;
-        for (CWI ch : chars) {
+        for (CWS ch : chars) {
             ch.segment = segment;
         }
     }
 
-    static void align(List<CWI> real, List<CWI> fast) {
+    static void align(List<CWS> real, List<CWS> fast) {
         DiffAlgorithmFactory factory = MeyersDiff.factory();
-        Patch<CWI> diff = DiffUtils.diff(fast, real, factory.create((cw1, cw2) -> cw1.ch == cw2.ch), null, true);
-        for (AbstractDelta<CWI> delta : diff.getDeltas()) {
+        Patch<CWS> diff = DiffUtils.diff(fast, real, factory.create((cw1, cw2) -> cw1.ch == cw2.ch), null, true);
+        for (AbstractDelta<CWS> delta : diff.getDeltas()) {
             switch (delta.getType()) {
             case INSERT: {
-                Chunk<CWI> fastChunk = delta.getSource();
-                Chunk<CWI> realChunk = delta.getTarget();
+                Chunk<CWS> fastChunk = delta.getSource();
+                Chunk<CWS> realChunk = delta.getTarget();
                 int position = fastChunk.getPosition();
                 Integer segment;
                 if (position > 0 && position < fast.size()) {
-                    CWI before = fast.get(position - 1);
-                    CWI after = fast.get(position);
+                    CWS before = fast.get(position - 1);
+                    CWS after = fast.get(position);
                     segment = segment(Arrays.asList(before, after));
                 } else {
                     segment = null;
@@ -64,18 +64,18 @@ public final class TextSync {
             case DELETE:
                 break;
             case CHANGE: {
-                Chunk<CWI> fastChunk = delta.getSource();
-                Chunk<CWI> realChunk = delta.getTarget();
+                Chunk<CWS> fastChunk = delta.getSource();
+                Chunk<CWS> realChunk = delta.getTarget();
                 Integer segment = segment(fastChunk.getLines());
                 setSegment(segment, realChunk.getLines());
                 break;
             }
             case EQUAL: {
-                Chunk<CWI> fastChunk = delta.getSource();
-                Chunk<CWI> realChunk = delta.getTarget();
+                Chunk<CWS> fastChunk = delta.getSource();
+                Chunk<CWS> realChunk = delta.getTarget();
                 for (int i = 0; i < fastChunk.getLines().size(); i++) {
-                    CWI ifast = fastChunk.getLines().get(i);
-                    CWI ireal = realChunk.getLines().get(i);
+                    CWS ifast = fastChunk.getLines().get(i);
+                    CWS ireal = realChunk.getLines().get(i);
                     Integer segment = ifast.segment;
                     if (segment != null) {
                         ireal.segment = segment;
@@ -84,7 +84,7 @@ public final class TextSync {
             }
             }
         }
-        for (CWI ch : real) {
+        for (CWS ch : real) {
             if (ch.segment == null) {
                 if (ch.ch != ' ') {
                     // todo: error

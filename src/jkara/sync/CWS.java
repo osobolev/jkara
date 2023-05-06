@@ -1,11 +1,11 @@
 package jkara.sync;
 
-final class CWI {
+final class CWS {
 
     final char ch;
     Integer segment;
 
-    CWI(char ch, Integer segment) {
+    CWS(char ch, Integer segment) {
         this.ch = ch;
         this.segment = segment;
     }
