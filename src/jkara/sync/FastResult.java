@@ -16,18 +16,22 @@ final class FastResult {
 
     final List<CWI> list;
     final List<Segment> segments;
+    final String language;
 
-    private FastResult(List<CWI> list, List<Segment> segments) {
+    private FastResult(List<CWI> list, List<Segment> segments, String language) {
         this.list = list;
         this.segments = segments;
+        this.language = language;
     }
 
     static FastResult read(Path file) throws IOException {
         List<CWI> buf = new ArrayList<>();
         List<Segment> segments = new ArrayList<>();
+        String language;
         try (InputStream is = Files.newInputStream(file)) {
             JSONObject obj = new JSONObject(new JSONTokener(is));
             JSONArray segs = obj.getJSONArray("segments");
+            language = obj.getString("language");
             for (int i = 0; i < segs.length(); i++) {
                 JSONObject seg = segs.getJSONObject(i);
                 double start = seg.getDouble("start");
@@ -42,6 +46,6 @@ final class FastResult {
             }
         }
         Normalizer.finish(buf);
-        return new FastResult(buf, segments);
+        return new FastResult(buf, segments, language);
     }
 }
