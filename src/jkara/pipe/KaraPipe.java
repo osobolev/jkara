@@ -93,7 +93,10 @@ public final class KaraPipe {
         if (fastJson.isModified()) {
             log("Transcribing vocals...");
             String language = maybeLanguage == null ? "-" : maybeLanguage;
-            runner.runPython("scripts/transcribe.py", vocals.input().toString(), fastJson.output().toString(), language);
+            runner.runPython(
+                "scripts/transcribe.py",
+                vocals.input().toString(), fastJson.output().toString(), language
+            );
         }
         StageFile text;
         if (userText != null) {
@@ -113,7 +116,10 @@ public final class KaraPipe {
         StageFile alignedJson = stages.file("aligned.json", vocals, textJson);
         if (alignedJson.isModified()) {
             log("Performing alignment...");
-            runner.runPython("scripts/align.py", vocals.input().toString(), textJson.input().toString(), alignedJson.output().toString());
+            runner.runPython(
+                "scripts/align.py",
+                vocals.input().toString(), textJson.input().toString(), alignedJson.output().toString()
+            );
         }
         StageFile ass = stages.file("subs.ass", text, alignedJson);
         if (ass.isModified()) {
@@ -126,7 +132,10 @@ public final class KaraPipe {
             Path tmpDuration = Files.createTempFile("duration", ".txt");
             String duration;
             try {
-                runner.runPython("scripts/duration.py", noVocals.input().toString(), tmpDuration.toString());
+                runner.runPython(
+                    "scripts/duration.py",
+                    noVocals.input().toString(), tmpDuration.toString()
+                );
                 duration = Files.readString(tmpDuration);
             } finally {
                 Files.deleteIfExists(tmpDuration);
