@@ -10,11 +10,9 @@ import java.util.stream.Collectors;
 
 final class RealText {
 
-    final String text;
     final List<CWI> list;
 
-    private RealText(String text, List<CWI> list) {
-        this.text = text;
+    private RealText(List<CWI> list) {
         this.list = list;
     }
 
@@ -26,6 +24,6 @@ final class RealText {
         List<CWI> buf = new ArrayList<>();
         Normalizer.append(buf, str, null);
         Normalizer.finish(buf);
-        return new RealText(str, buf);
+        return new RealText(buf);
     }
 }

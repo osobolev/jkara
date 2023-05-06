@@ -24,17 +24,12 @@ final class RealSegments {
     private void addChunk(int to) {
         if (prevSegment == null)
             return;
-//        StringBuilder buf = new StringBuilder();
-//        for (int i = start; i < to; i++) {
-//            CWI ch = real.list.get(i);
-//            buf.append(ch.ch());
-//        }
-        CWI first = real.list.get(start);
-        CWI last = real.list.get(to - 1);
-        int firstIndex = first.index().intValue();
-        int lastIndex = last.index().intValue();
-        // todo: no need to extract original text - send normalized to align???
-        String origText = real.text.substring(firstIndex, lastIndex + 1).trim();
+        StringBuilder buf = new StringBuilder();
+        for (int i = start; i < to; i++) {
+            CWI ch = real.list.get(i);
+            buf.append(ch.ch);
+        }
+        String origText = buf.toString().trim();
         Segment fastSegment = fast.segments.get(prevSegment.intValue());
         result.add(new Segment(fastSegment.start(), fastSegment.end(), origText));
     }
