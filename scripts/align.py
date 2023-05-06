@@ -2,6 +2,7 @@ import json
 import os
 import sys
 
+import torch
 import whisperx
 
 
@@ -9,10 +10,11 @@ def align(audio, text_json, aligned_json):
     with open(text_json, "r") as json_file:
         data = json.load(json_file)
 
-    device = "cpu" # todo: detect???
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     language = data["language"]
     align_model, align_metadata = whisperx.load_align_model(language, device, model_name="WAV2VEC2_ASR_LARGE_LV60K_960H")
     aligned = whisperx.align(data["segments"], align_model, align_metadata, audio, device, extend_duration=2.0)
+    
     for segment in aligned["segments"]:
         char_segments = []
         for cidx, crow in segment["char-segments"].iterrows():
