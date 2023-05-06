@@ -6,12 +6,15 @@ import com.github.difflib.algorithm.myers.MeyersDiff;
 import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Chunk;
 import com.github.difflib.patch.Patch;
-import jkara.*;
+import jkara.OutputFactory;
+import jkara.Segment;
+import jkara.Util;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -112,15 +115,12 @@ public final class TextSync {
         return buf.toString();
     }
 
-    public static void main(String[] args) throws IOException {
-//        RealText real = RealText.read(Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt"));
-//        FastResult fast = FastResult.read(Path.of("C:\\home\\projects\\my\\kara\\work\\fast.json"));
-        RealText real = RealText.read(Path.of("C:\\Downloads\\kara\\war\\text.txt"));
-        FastResult fast = FastResult.read(Path.of("C:\\Downloads\\kara\\war\\fast.json"));
+    public static void sync(Path text, Path fastJson, OutputFactory textJson) throws IOException {
+        RealText real = RealText.read(text);
+        FastResult fast = FastResult.read(fastJson);
 
-        TextSync aligner = new TextSync();
-        aligner.align(real.list, fast.list);
-        List<Segment> segments = aligner.getResult(real, fast);
+        align(real.list, fast.list);
+        List<Segment> segments = getResult(real, fast);
         JSONArray array = new JSONArray();
         for (Segment segment : segments) {
             JSONObject obj = new JSONObject(Map.of(
@@ -130,9 +130,23 @@ public final class TextSync {
             ));
             array.put(obj);
         }
-        JSONObject root = new JSONObject(Map.of("segments", array));
+        JSONObject root = new JSONObject(Map.of(
+            "segments", array,
+            "language", fast.language
+        ));
+        try (Writer w = textJson.open()) {
+            root.write(w, 2, 0);
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        Path real = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
+        Path fast = Path.of("C:\\home\\projects\\my\\kara\\work\\_fast.json");
+//        Path real = Path.of("C:\\Downloads\\kara\\war\\text.txt");
+//        Path fast = Path.of("C:\\Downloads\\kara\\war\\fast.json");
+
         StringWriter sw = new StringWriter();
-        root.write(sw, 2, 0);
+        sync(real, fast, () -> sw);
         System.out.println(sw);
     }
 }
