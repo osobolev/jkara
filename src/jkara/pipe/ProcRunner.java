@@ -29,7 +29,7 @@ final class ProcRunner {
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    void runCommand(String what, List<String> args) throws IOException, InterruptedException {
+    private void runCommand(String what, List<String> args) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(args);
         String path = pb.environment().get("PATH");
         pb.environment().put("PATH", path == null ? ffmpeg.toString() : ffmpeg + File.pathSeparator + path);
@@ -47,6 +47,13 @@ final class ProcRunner {
         list.add(script);
         list.addAll(Arrays.asList(args));
         runCommand("script " + script, list);
+    }
+
+    void runExe(String exe, String... args) throws IOException, InterruptedException {
+        List<String> list = new ArrayList<>();
+        list.add(exe);
+        list.addAll(Arrays.asList(args));
+        runCommand(exe, list);
     }
 
     void runFFMPEG(String... args) throws IOException, InterruptedException {

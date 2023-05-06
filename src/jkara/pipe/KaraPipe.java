@@ -42,12 +42,23 @@ public final class KaraPipe {
         Path dir = Path.of("work"); // todo
         Files.createDirectories(dir);
 
-        // todo: run youtube-download
-        // todo: run demucs
+        // todo: run youtube-download (optional)
 
-        Path vocals = Path.of("C:\\home\\projects\\my\\kara\\work\\separated\\htdemucs\\PjdEDOIai8Y\\vocals.wav");
-        Path noVocals = Path.of("C:\\home\\projects\\my\\kara\\work\\separated\\htdemucs\\PjdEDOIai8Y\\no_vocals.wav");
-        Path text = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
+        String id = "PjdEDOIai8Y"; // todo
+        Path demucsDir = dir.resolve("htdemucs/" + id);
+        Path vocals = demucsDir.resolve("vocals.wav");
+        Path noVocals = demucsDir.resolve("no_vocals.wav");
+        if (!Files.exists(vocals) || !Files.exists(noVocals)) {
+            System.out.println("Separating vocals and instrumental...");
+            String shifts = "0"; // todo
+            runner.runExe(
+                "demucs",
+                "--two-stems=vocals",
+                "--shifts=" + shifts,
+                "--out=" + dir,
+                audio.toString()
+            );
+        }
 
         Path fastJson = dir.resolve("fast.json");
         if (!Files.exists(fastJson)) {
