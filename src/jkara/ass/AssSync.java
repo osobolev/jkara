@@ -9,12 +9,9 @@ import java.util.List;
 
 public final class AssSync {
 
-    public static void main(String[] args) throws IOException {
-        RawText raw = RawText.read(Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt"));
-        Aligned aligned = Aligned.read(Path.of("C:\\home\\projects\\my\\kara\\work\\aligned.json"));
-        System.out.println(raw.list);
-//        RealText real = RealText.read(Path.of("C:\\Downloads\\kara\\war\\text.txt"));
-//        Aligned aligned = Aligned.read(Path.of("C:\\Downloads\\kara\\war\\aligned.json"));
+    public static void sync(Path text, Path alignedJson) throws IOException {
+        RawText raw = RawText.read(text);
+        Aligned aligned = Aligned.read(alignedJson);
         int ir = 0;
         int ia = 0;
         while (true) {
@@ -49,5 +46,13 @@ public final class AssSync {
             ir++;
             ia++;
         }
+    }
+
+    public static void main(String[] args) throws IOException {
+        Path text = Path.of("C:\\home\\projects\\my\\kara\\work\\text.txt");
+        Path aligned = Path.of("C:\\home\\projects\\my\\kara\\work\\aligned.json");
+//        Path text = Path.of("C:\\Downloads\\kara\\war\\text.txt");
+//        Path aligned = Path.of("C:\\Downloads\\kara\\war\\aligned.json");
+        sync(text, aligned);
     }
 }
