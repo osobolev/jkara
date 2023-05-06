@@ -7,7 +7,7 @@ def duration(no_vocals_path, duration_path):
         frames = f.getnframes()
         rate = f.getframerate()
         duration = frames / float(rate)
-    with open(duration_path, "w") as f:
+    with open(duration_path, "w", encoding="utf-8") as f:
         print(f"{duration:2.2f}", file=f)
 
 

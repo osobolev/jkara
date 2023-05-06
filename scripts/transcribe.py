@@ -18,8 +18,8 @@ def transcribe(audio, json_path, language):
         out_segments.append({ "start": segment.start, "end": segment.end, "text": segment.text })
     js_data = { "segments": out_segments, "language": info.language }
 
-    with open(json_path, "w") as js_file:
-        json.dump(js_data, js_file, sort_keys=True, indent=4, allow_nan=True)
+    with open(json_path, "w", encoding="utf-8") as js_file:
+        json.dump(js_data, js_file, sort_keys=True, indent=4, allow_nan=True, ensure_ascii=False)
 
 
 if __name__ == '__main__':
