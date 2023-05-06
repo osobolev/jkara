@@ -57,6 +57,7 @@ tasks.register("distr", Copy::class) {
     from("config")
     from(".") {
         include("ffmpeg/**")
+        include("scripts/**")
     }
     into("$rootDir/distr")
 }

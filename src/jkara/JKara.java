@@ -2,8 +2,6 @@ package jkara;
 
 import jkara.pipe.KaraPipe;
 
-import java.nio.file.Path;
-
 public final class JKara {
 
     /**
@@ -19,7 +17,7 @@ public final class JKara {
         }
 
         try {
-            KaraPipe pipe = new KaraPipe(null);
+            KaraPipe pipe = new KaraPipe(null, cmd.rootDir);
             if (cmd.url != null) {
                 pipe.downloadYoutube(cmd.url, cmd.audio);
             }

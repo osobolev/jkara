@@ -11,8 +11,8 @@ public final class KaraPipe {
 
     private final ProcRunner runner;
 
-    public KaraPipe(Path ffmpeg) {
-        this.runner = new ProcRunner(ffmpeg);
+    public KaraPipe(Path ffmpeg, Path scriptDir) {
+        this.runner = new ProcRunner(ffmpeg, scriptDir);
     }
 
     private static String escapeFilter(String path) {
@@ -41,6 +41,11 @@ public final class KaraPipe {
         );
     }
 
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
+    private static void log(String message) {
+        System.out.println(">>>>> " + message);
+    }
+
     /**
      * Pipeline:
      * audio.mp3 -> demucs -> vocals.wav + no_vocals.wav
@@ -50,7 +55,6 @@ public final class KaraPipe {
      * aligned.json + text.txt -> AssSync -> ass file
      * no_vocals.wav + ass file -> ffmpeg -> karaoke.mp4
      */
-    @SuppressWarnings("UseOfSystemOutOrSystemErr")
     public void makeKaraoke(Path audio, String maybeLanguage, Path text, Path workDir) throws IOException, InterruptedException {
         Files.createDirectories(workDir);
 
@@ -61,7 +65,7 @@ public final class KaraPipe {
         Path vocals = demucsDir.resolve("vocals.wav");
         Path noVocals = demucsDir.resolve("no_vocals.wav");
         if (!Files.exists(vocals) || !Files.exists(noVocals)) {
-            System.out.println("Separating vocals and instrumental...");
+            log("Separating vocals and instrumental...");
             String shifts = "0"; // todo: ???
             runner.runExe(
                 "demucs",
@@ -74,28 +78,28 @@ public final class KaraPipe {
 
         Path fastJson = workDir.resolve("fast.json");
         if (!Files.exists(fastJson)) {
-            System.out.println("Transcribing vocals...");
+            log("Transcribing vocals...");
             String language = maybeLanguage == null ? "-" : maybeLanguage;
             runner.runPython("scripts/transcribe.py", vocals.toString(), fastJson.toString(), language);
         }
         Path textJson = workDir.resolve("text.json");
         if (!Files.exists(textJson)) {
-            System.out.println("Synchronizing transcription with text...");
+            log("Synchronizing transcription with text...");
             TextSync.sync(text, fastJson, () -> Files.newBufferedWriter(textJson));
         }
         Path alignedJson = workDir.resolve("aligned.json");
         if (!Files.exists(alignedJson)) {
-            System.out.println("Performing alignment...");
+            log("Performing alignment...");
             runner.runPython("scripts/align.py", vocals.toString(), textJson.toString(), alignedJson.toString());
         }
         Path ass = workDir.resolve("subs.ass");
         if (!Files.exists(ass)) {
-            System.out.println("Creating subtitles...");
+            log("Creating subtitles...");
             AssSync.sync(text, alignedJson, () -> Files.newBufferedWriter(ass));
         }
         Path karaoke = workDir.resolve("karaoke.mp4");
         if (!Files.exists(karaoke)) {
-            System.out.println("Building karaoke video...");
+            log("Building karaoke video...");
             Path tmpDuration = Files.createTempFile("duration", ".txt");
             String duration;
             try {
@@ -118,6 +122,6 @@ public final class KaraPipe {
                 karaoke.toString()
             );
         }
-        System.out.println("Done: " + karaoke);
+        log("Done: " + karaoke);
     }
 }

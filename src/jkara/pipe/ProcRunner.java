@@ -12,9 +12,11 @@ import java.util.List;
 final class ProcRunner {
 
     private final Path ffmpegDir;
+    private final Path rootDir;
 
-    ProcRunner(Path ffmpegDir) {
+    ProcRunner(Path ffmpegDir, Path rootDir) {
         this.ffmpegDir = ffmpegDir;
+        this.rootDir = rootDir;
     }
 
     private static void capture(InputStream is, OutputStream os) {
@@ -46,7 +48,7 @@ final class ProcRunner {
     void runPython(String script, String... args) throws IOException, InterruptedException {
         List<String> list = new ArrayList<>();
         list.add("python");
-        list.add(script);
+        list.add(rootDir.resolve(script).toString());
         list.addAll(Arrays.asList(args));
         runCommand("script " + script, list);
     }

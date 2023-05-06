@@ -9,13 +9,15 @@ import java.util.List;
 
 final class CmdArgs {
 
+    final Path rootDir;
     final Path dir;
     final String url;
     final Path audio;
     final String language;
     final Path text;
 
-    private CmdArgs(Path dir, String url, Path audio, String language, Path text) {
+    private CmdArgs(Path rootDir, Path dir, String url, Path audio, String language, Path text) {
+        this.rootDir = rootDir;
         this.dir = dir;
         this.url = url;
         this.audio = audio;
@@ -47,21 +49,25 @@ final class CmdArgs {
 
     private static CmdArgs doParse(String[] args) throws ArgException {
         List<String> positionalArgs = new ArrayList<>();
+        String rootDirArg = null;
         String dirArg = null;
         String fileArg = null;
         String langArg = null;
-        for (int i = 0; i < args.length; i++) {
+        for (int i = 0; i < args.length; ) {
             String arg = args[i];
             if (arg.startsWith("-") && i + 1 < args.length) {
                 String value = args[i + 1];
                 switch (arg) {
+                case "-r" -> rootDirArg = value;
                 case "-d" -> dirArg = value;
                 case "-f" -> fileArg = value;
                 case "-l" -> langArg = value;
                 default -> error("Unexpected option " + arg);
                 }
+                i += 2;
             } else {
                 positionalArgs.add(arg);
+                i++;
             }
         }
         if (positionalArgs.size() != 2) {
@@ -96,7 +102,8 @@ final class CmdArgs {
                 return error(String.format("File '%s' does not exist", audio));
             }
         }
-        return new CmdArgs(dir, url, audio, langArg, text);
+        Path rootDir = rootDirArg == null ? Path.of(".") : Path.of(rootDirArg);
+        return new CmdArgs(rootDir, dir, url, audio, langArg, text);
     }
 
     static CmdArgs parse(String[] args) {
