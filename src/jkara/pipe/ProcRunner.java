@@ -11,10 +11,10 @@ import java.util.List;
 
 final class ProcRunner {
 
-    private final Path ffmpeg;
+    private final Path ffmpegDir;
 
-    ProcRunner(Path ffmpeg) {
-        this.ffmpeg = ffmpeg;
+    ProcRunner(Path ffmpegDir) {
+        this.ffmpegDir = ffmpegDir;
     }
 
     private static void capture(InputStream is, OutputStream os) {
@@ -31,8 +31,10 @@ final class ProcRunner {
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     private void runCommand(String what, List<String> args) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(args);
-        String path = pb.environment().get("PATH");
-        pb.environment().put("PATH", path == null ? ffmpeg.toString() : ffmpeg + File.pathSeparator + path);
+        if (ffmpegDir != null) {
+            String path = pb.environment().get("PATH");
+            pb.environment().put("PATH", path == null ? ffmpegDir.toString() : ffmpegDir + File.pathSeparator + path);
+        }
         Process p = pb.start();
         capture(p.getInputStream(), System.out);
         capture(p.getErrorStream(), System.err);
@@ -58,7 +60,9 @@ final class ProcRunner {
 
     void runFFMPEG(String... args) throws IOException, InterruptedException {
         List<String> list = new ArrayList<>();
-        list.add(ffmpeg.resolve("ffmpeg").toString());
+        String ffmpeg = "ffmpeg";
+        String ffmpegPath = ffmpegDir == null ? ffmpeg : ffmpegDir.resolve(ffmpeg).toString();
+        list.add(ffmpegPath);
         list.addAll(Arrays.asList(args));
         runCommand("ffmpeg", list);
     }
