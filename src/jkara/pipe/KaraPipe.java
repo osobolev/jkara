@@ -137,7 +137,10 @@ public final class KaraPipe {
         }
         StageFile ass = stages.file("subs.ass", alignedJson, text);
         if (isStage("Creating subtitles", ass)) {
-            AssSync.sync(text.input(), alignedJson.input(), () -> Files.newBufferedWriter(ass.output()));
+            AssSync.sync(
+                text.input(), alignedJson.input(), textJson.input(),
+                () -> Files.newBufferedWriter(ass.output())
+            );
         }
         StageFile infoJson = new StageFile(audio.resolveSibling(audio.getFileName() + ".info.json"), true);
         StageFile scroll = stages.file("karaoke.ass", ass, infoJson);

@@ -8,7 +8,7 @@ import java.nio.file.Path;
 
 public final class AssSync {
 
-    public static void sync(Path text, Path alignedJson, OutputFactory factory) throws IOException {
+    public static void sync(Path text, Path textJson, Path alignedJson, OutputFactory factory) throws IOException {
         RawText raw = RawText.read(text);
         Aligned aligned = Aligned.read(alignedJson);
         int ir = 0;
@@ -35,7 +35,7 @@ public final class AssSync {
             if (!String.valueOf(ca.ch).equalsIgnoreCase(String.valueOf(cr)))
                 throw new IllegalStateException(String.format(
                     "Unexpected misalignment between %s and %s (remove %s and repeat)",
-                    text.getFileName(), alignedJson.getFileName(), alignedJson
+                    text.getFileName(), alignedJson.getFileName(), textJson
                 ));
 
             raw.chars[ir].timestamps = ca.timestamps;
