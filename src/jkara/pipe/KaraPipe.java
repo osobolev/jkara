@@ -135,7 +135,7 @@ public final class KaraPipe {
                 vocals.input().toString(), textJson.input().toString(), alignedJson.output().toString()
             );
         }
-        StageFile ass = stages.file("subs.ass", text, alignedJson);
+        StageFile ass = stages.file("subs.ass", alignedJson, text);
         if (isStage("Creating subtitles", ass)) {
             AssSync.sync(text.input(), alignedJson.input(), () -> Files.newBufferedWriter(ass.output()));
         }
