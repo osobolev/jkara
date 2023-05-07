@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -88,8 +90,8 @@ public final class KaraPipe {
         Files.createDirectories(workDir);
         Stages stages = new Stages(workDir);
 
-        String id = nameWithoutExtension(audio);
-        String demucsDir = "htdemucs/" + id;
+        String baseName = nameWithoutExtension(audio);
+        String demucsDir = "htdemucs/" + baseName;
         StageFile vocals = stages.file(demucsDir + "/vocals.wav");
         StageFile noVocals = stages.file(demucsDir + "/no_vocals.wav");
         if (isStage("Separating vocals and instrumental", vocals, noVocals)) {
@@ -144,31 +146,36 @@ public final class KaraPipe {
         }
         StageFile karaoke = stages.file("karaoke.mp4", noVocals, scroll);
         if (isStage("Building karaoke video", karaoke)) {
-            Path tmpDuration = Files.createTempFile("duration", ".txt");
-            String duration;
-            try {
-                runner.runPython(
-                    "scripts/duration.py",
-                    noVocals.input().toString(), tmpDuration.toString()
+            List<String> videoInput;
+            Path video = audio.resolveSibling(baseName + ".webm");
+            if (Files.exists(video)) {
+                videoInput = List.of("-i", video.toString());
+            } else {
+                // Используем виртуальное видео длиной 1 час, оно обрезается с помощью опции -shortest до длины аудио:
+                videoInput = List.of(
+                    "-f", "lavfi", "-i", "color=size=1280x720:duration=3600:rate=24:color=black"
                 );
-                duration = Files.readString(tmpDuration);
-            } finally {
-                Files.deleteIfExists(tmpDuration);
             }
+            List<String> audioInput = List.of(
+                "-i", noVocals.input().toString()
+            );
 
-            runner.runFFMPEG(
+            List<String> ffmpeg = new ArrayList<>();
+            ffmpeg.addAll(videoInput);
+            ffmpeg.addAll(audioInput);
+            ffmpeg.addAll(List.of(
                 "-y", "-stats",
                 "-v", "quiet",
-                "-f", "lavfi",
-                "-i", String.format("color=size=1280x720:duration=%s:rate=24:color=black", duration),
-                "-i", noVocals.input().toString(),
                 "-vf", "ass=" + escapeFilter(scroll.input().toString()),
+                "-map", "0:v:0",
+                "-map", "1:a:0",
                 "-shortest",
                 "-c:v", "libx264",
                 "-c:a", "aac",
                 "-b:a", "192k",
                 karaoke.output().toString()
-            );
+            ));
+            runner.runFFMPEG(ffmpeg);
         }
         long t1 = System.currentTimeMillis();
         log(String.format("Done in %s, result written to %s", duration(t1 - t0), karaoke.input()));

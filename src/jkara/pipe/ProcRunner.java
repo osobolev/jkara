@@ -64,12 +64,12 @@ final class ProcRunner {
         runExe(exe, Arrays.asList(args));
     }
 
-    void runFFMPEG(String... args) throws IOException, InterruptedException {
+    void runFFMPEG(List<String> args) throws IOException, InterruptedException {
         List<String> list = new ArrayList<>();
         String ffmpeg = "ffmpeg";
         String ffmpegPath = ffmpegDir == null ? ffmpeg : ffmpegDir.resolve(ffmpeg).toString();
         list.add(ffmpegPath);
-        list.addAll(Arrays.asList(args));
+        list.addAll(args);
         runCommand("ffmpeg", list);
     }
 }
