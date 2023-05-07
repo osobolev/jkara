@@ -132,7 +132,12 @@ public final class KaraPipe {
         if (isStage("Creating subtitles", ass)) {
             AssSync.sync(text.input(), alignedJson.input(), () -> Files.newBufferedWriter(ass.output()));
         }
-        StageFile karaoke = stages.file("karaoke.mp4", noVocals, ass);
+        StageFile scroll = stages.file("karaoke.ass", ass);
+        if (isStage("Creating karaoke subtitles", scroll)) {
+            // todo: modify subs for scrolling:
+            Files.copy(ass.input(), scroll.output());
+        }
+        StageFile karaoke = stages.file("karaoke.mp4", noVocals, scroll);
         if (isStage("Building karaoke video", karaoke)) {
             Path tmpDuration = Files.createTempFile("duration", ".txt");
             String duration;
@@ -151,7 +156,7 @@ public final class KaraPipe {
                 "-f", "lavfi",
                 "-i", String.format("color=size=1280x720:duration=%s:rate=24:color=black", duration),
                 "-i", noVocals.input().toString(),
-                "-vf", "ass=" + escapeFilter(ass.input().toString()),
+                "-vf", "ass=" + escapeFilter(scroll.input().toString()),
                 "-shortest",
                 "-c:v", "libx264",
                 "-c:a", "aac",
