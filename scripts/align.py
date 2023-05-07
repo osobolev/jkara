@@ -16,7 +16,8 @@ def align(audio, text_json, aligned_json):
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     language = data["language"]
-    align_model, align_metadata = whisperx.load_align_model(language, device, model_name="WAV2VEC2_ASR_LARGE_LV60K_960H")
+    model = "jonatasgrosman/wav2vec2-large-xlsr-53-russian" if language == "ru" else "WAV2VEC2_ASR_LARGE_LV60K_960H"
+    align_model, align_metadata = whisperx.load_align_model(language, device, model_name=model)
     aligned = whisperx.align(data["segments"], align_model, align_metadata, audio, device, extend_duration=2.0)
     
     for segment in aligned["segments"]:
