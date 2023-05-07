@@ -28,6 +28,7 @@ def align(audio, text_json, aligned_json):
         for cidx, crow in segment["word-segments"].iterrows():
             word_segments.append(crow.to_dict())
         segment["word-segments"] = word_segments
+
     with open(aligned_json, "w", encoding="utf-8") as js_file:
         json.dump(aligned, js_file, sort_keys=True, indent=4, allow_nan=True, ensure_ascii=False)
 
