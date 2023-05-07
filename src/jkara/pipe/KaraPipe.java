@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class KaraPipe {
 
@@ -44,7 +46,8 @@ public final class KaraPipe {
         for (StageFile file : files) {
             String cause = file.isModified();
             if (cause != null) {
-                log(log + " (cause: " + cause + ")...");
+                String output = Stream.of(files).map(f -> f.input().getFileName().toString()).collect(Collectors.joining(", "));
+                log(String.format("%s (building '%s' because %s)...", log, output, cause));
                 return true;
             }
         }
