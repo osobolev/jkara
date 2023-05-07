@@ -114,13 +114,13 @@ public final class AssJoiner {
             for (int i = 0; i < group.size(); i++) {
                 DialogLine line = group.get(i);
                 Double silenceBefore;
-                String lineBefore;
+                boolean starting;
                 if (i == 0) {
                     double sincePrev = line.start() - prevEnd;
                     double addSilence;
                     if (gi == 0) {
                         addSilence = 2.0; // todo: extract to parameter
-                        lineBefore = "---- ";
+                        starting = true;
                         double initialSilence = line.start() - addSilence;
                         if (initialSilence >= 2.5 && !titles.isEmpty()) {
                             DialogLine titleLine = DialogLine.create(line.fields(), 0.0, 2.0, String.join("\\N", titles));
@@ -128,12 +128,12 @@ public final class AssJoiner {
                         }
                     } else {
                         addSilence = 0.75; // todo: extract to parameter
-                        lineBefore = null;
+                        starting = sincePrev > 20.0; // todo: extract to parameter
                     }
                     silenceBefore = Math.min(addSilence, sincePrev);
                 } else {
                     silenceBefore = null;
-                    lineBefore = null;
+                    starting = false;
                 }
                 int rem = i % 4;
                 List<DialogLine> join = switch (rem) {
@@ -161,6 +161,7 @@ public final class AssJoiner {
                 } else {
                     nextStart = null;
                 }
+                String lineBefore = starting ? "---- " : null;
                 DialogLine newLine = joinLines(
                     join, rem, silenceBefore, lineBefore, nextStart,
                     j -> rem == 3 && (j == 0 || j == 1),
