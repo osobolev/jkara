@@ -4,7 +4,7 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 
-public final class DialogSection extends IAssSection {
+public final class DialogSection implements IAssSection {
 
     private final String name;
     private final SectionFormat format;

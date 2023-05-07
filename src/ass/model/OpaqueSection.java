@@ -3,7 +3,7 @@ package ass.model;
 import java.io.PrintWriter;
 import java.util.List;
 
-public final class OpaqueSection extends IAssSection {
+public final class OpaqueSection implements IAssSection {
 
     private final List<String> lines;
 

@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public final class StyleSection extends IAssSection {
+public final class StyleSection implements IAssSection {
 
     private final List<String> lines;
     public final Map<String, AssStyle> styles;

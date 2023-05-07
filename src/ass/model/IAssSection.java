@@ -2,7 +2,7 @@ package ass.model;
 
 import java.io.PrintWriter;
 
-public abstract class IAssSection {
+public interface IAssSection {
 
-    public abstract void write(PrintWriter pw);
+    void write(PrintWriter pw);
 }

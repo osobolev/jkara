@@ -20,7 +20,7 @@ final class StyleSectionParser extends FormattedSectionParser {
         Map<String, String> map = new LineParser(line).parseLine("Style", format);
         if (map != null) {
             String name = null;
-            Map<StyleProperty, String> values = new EnumMap<>(StyleProperty.class);
+            Map<AssStyleProperty, String> values = new EnumMap<>(AssStyleProperty.class);
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 String field = entry.getKey();
                 String value = entry.getValue();
@@ -29,7 +29,7 @@ final class StyleSectionParser extends FormattedSectionParser {
                     continue;
                 }
                 try {
-                    StyleProperty property = StyleProperty.valueOf(field);
+                    AssStyleProperty property = AssStyleProperty.valueOf(field);
                     values.put(property, value);
                 } catch (IllegalArgumentException ex) {
                     // ignore unrecognized fields
