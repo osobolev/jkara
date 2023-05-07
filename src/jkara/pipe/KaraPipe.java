@@ -59,6 +59,7 @@ public final class KaraPipe {
         Files.createDirectories(audio.getParent());
         runner.runExe(
             "yt-dlp",
+            "--write-info-json", "-k",
             "--extract-audio",
             "--audio-format", "mp3",
             "--output", audio.toString(),
@@ -138,7 +139,8 @@ public final class KaraPipe {
         }
         StageFile scroll = stages.file("karaoke.ass", ass);
         if (isStage("Creating karaoke subtitles", scroll)) {
-            AssJoiner.join(ass.input(), scroll.output());
+            Path infoJson = audio.resolveSibling(audio.getFileName() + ".info.json");
+            AssJoiner.join(ass.input(), infoJson, scroll.output());
         }
         StageFile karaoke = stages.file("karaoke.mp4", noVocals, scroll);
         if (isStage("Building karaoke video", karaoke)) {

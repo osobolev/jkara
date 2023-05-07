@@ -6,8 +6,11 @@ import ass.model.DialogLine;
 import ass.model.ParsedAss;
 import ass.parser.AssParser;
 import jkara.util.Util;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,14 +22,6 @@ import java.util.function.Function;
 import java.util.function.IntPredicate;
 
 public final class AssJoiner {
-
-    // todo: нужно сгруппировать AssLines по принципу "расстояние по времени между соседними строками < 1 сек"
-    // todo: потом эти группы побить на группы с фиксированным кол-вом строк (например 4)
-    // todo: показываем так:
-    //   *1  1     5 *5  5 ...
-    //    2 *2     6  6 *6
-    //       3 *3  3     7
-    //       4  4 *4     8
 
     private static List<List<DialogLine>> splitByPauses(List<DialogLine> lines, double pause) {
         List<List<DialogLine>> result = new ArrayList<>();
@@ -124,7 +119,7 @@ public final class AssJoiner {
         return Collections.nCopies(n, null);
     }
 
-    public static List<DialogLine> join(ParsedAss parsed) {
+    public static List<DialogLine> join(ParsedAss parsed, List<String> titles) {
         List<List<DialogLine>> groups = splitByPauses(parsed.getLines(), 2.5); // todo: extract to parameter
         List<DialogLine> newLines = new ArrayList<>();
         double prevEnd = 0;
@@ -139,7 +134,12 @@ public final class AssJoiner {
                     double addSilence;
                     if (gi == 0) {
                         addSilence = 2.0; // todo: extract to parameter
-                        lineBefore = "----";
+                        lineBefore = "---- ";
+                        double initialSilence = line.start() - addSilence;
+                        if (initialSilence >= 2.5 && !titles.isEmpty()) {
+                            DialogLine titleLine = DialogLine.create(line.fields(), 0.0, 2.0, String.join("\\N", titles));
+                            newLines.add(titleLine);
+                        }
                     } else {
                         addSilence = 0.75; // todo: extract to parameter
                         lineBefore = null;
@@ -187,9 +187,29 @@ public final class AssJoiner {
         return newLines;
     }
 
-    public static void join(Path origAssPath, Path newAssPath) throws IOException {
+    public static void join(Path origAssPath, Path infoJson, Path newAssPath) throws IOException {
+        List<String> titles = new ArrayList<>();
+        if (Files.exists(infoJson)) {
+            try (InputStream is = Files.newInputStream(infoJson)) {
+                JSONObject obj = new JSONObject(new JSONTokener(is));
+                String artist = obj.optString("artist", null);
+                String track = obj.optString("track", null);
+                String title = obj.optString("title", null);
+                String fullTitle = obj.optString("fulltitle", null);
+                if (track != null) {
+                    titles.add(track);
+                    if (artist != null) {
+                        titles.add("by " + artist);
+                    }
+                } else if (fullTitle != null) {
+                    titles.add(fullTitle);
+                } else if (title != null) {
+                    titles.add(title);
+                }
+            }
+        }
         ParsedAss origAss = AssParser.parse(origAssPath);
-        List<DialogLine> newLines = join(origAss);
+        List<DialogLine> newLines = join(origAss, titles);
         ParsedAss newAss = origAss.withLines(newLines);
         try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(newAssPath))) {
             newAss.write(pw);
