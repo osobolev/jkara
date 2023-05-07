@@ -39,6 +39,17 @@ public final class KaraPipe {
         System.out.printf(">>>>> [%s] %s%n", LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")), message);
     }
 
+    private static boolean isStage(String log, StageFile... files) {
+        for (StageFile file : files) {
+            String cause = file.isModified();
+            if (cause != null) {
+                log(log + " (cause: " + cause + ")...");
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void downloadYoutube(String url, Path audio) throws IOException, InterruptedException {
         log("Downloading from Youtube...");
         Files.createDirectories(audio.getParent());
@@ -75,8 +86,7 @@ public final class KaraPipe {
         String demucsDir = "htdemucs/" + id;
         StageFile vocals = stages.file(demucsDir + "/vocals.wav");
         StageFile noVocals = stages.file(demucsDir + "/no_vocals.wav");
-        if (vocals.isModified() || noVocals.isModified()) {
-            log("Separating vocals and instrumental...");
+        if (isStage("Separating vocals and instrumental", vocals, noVocals)) {
             String shifts = maybeShifts == null ? "1" : maybeShifts;
             runner.runExe(
                 "demucs",
@@ -90,8 +100,7 @@ public final class KaraPipe {
         }
 
         StageFile fastJson = stages.file("fast.json", vocals);
-        if (fastJson.isModified()) {
-            log("Transcribing vocals...");
+        if (isStage("Transcribing vocals", fastJson)) {
             String language = maybeLanguage == null ? "-" : maybeLanguage;
             runner.runPython(
                 "scripts/transcribe.py",
@@ -103,32 +112,27 @@ public final class KaraPipe {
             text = new StageFile(userText);
         } else {
             text = stages.file("text.txt");
-            if (text.isModified()) {
-                log("Saving transcribed text (you can edit it)...");
+            if (isStage("Saving transcribed text (you can edit it)", text)) {
                 FastText.textFromFast(fastJson.input(), text.output());
             }
         }
         StageFile textJson = stages.file("text.json", text, fastJson);
-        if (textJson.isModified()) {
-            log("Synchronizing transcription with text...");
+        if (isStage("Synchronizing transcription with text", textJson)) {
             TextSync.sync(text.input(), fastJson.input(), () -> Files.newBufferedWriter(textJson.output()));
         }
         StageFile alignedJson = stages.file("aligned.json", vocals, textJson);
-        if (alignedJson.isModified()) {
-            log("Performing alignment...");
+        if (isStage("Performing alignment...", alignedJson)) {
             runner.runPython(
                 "scripts/align.py",
                 vocals.input().toString(), textJson.input().toString(), alignedJson.output().toString()
             );
         }
         StageFile ass = stages.file("subs.ass", text, alignedJson);
-        if (ass.isModified()) {
-            log("Creating subtitles...");
+        if (isStage("Creating subtitles", ass)) {
             AssSync.sync(text.input(), alignedJson.input(), () -> Files.newBufferedWriter(ass.output()));
         }
         StageFile karaoke = stages.file("karaoke.mp4", noVocals, ass);
-        if (karaoke.isModified()) {
-            log("Building karaoke video...");
+        if (isStage("Building karaoke video", karaoke)) {
             Path tmpDuration = Files.createTempFile("duration", ".txt");
             String duration;
             try {
