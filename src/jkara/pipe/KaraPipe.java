@@ -115,7 +115,7 @@ public final class KaraPipe {
         }
         StageFile text;
         if (userText != null) {
-            text = new StageFile(userText);
+            text = new StageFile(userText, false);
         } else {
             text = stages.file("text.txt");
             if (isStage("Saving transcribed text (you can edit it)", text)) {
@@ -137,10 +137,10 @@ public final class KaraPipe {
         if (isStage("Creating subtitles", ass)) {
             AssSync.sync(text.input(), alignedJson.input(), () -> Files.newBufferedWriter(ass.output()));
         }
-        StageFile scroll = stages.file("karaoke.ass", ass);
+        StageFile infoJson = new StageFile(audio.resolveSibling(audio.getFileName() + ".info.json"), true);
+        StageFile scroll = stages.file("karaoke.ass", ass, infoJson);
         if (isStage("Creating karaoke subtitles", scroll)) {
-            Path infoJson = audio.resolveSibling(audio.getFileName() + ".info.json");
-            AssJoiner.join(ass.input(), infoJson, scroll.output());
+            AssJoiner.join(ass.input(), infoJson.input(), scroll.output());
         }
         StageFile karaoke = stages.file("karaoke.mp4", noVocals, scroll);
         if (isStage("Building karaoke video", karaoke)) {

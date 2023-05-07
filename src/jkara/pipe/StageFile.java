@@ -8,11 +8,13 @@ import java.nio.file.attribute.FileTime;
 final class StageFile {
 
     private final Path path;
+    private final boolean optional;
     private final StageFile[] dependsOn;
     private boolean modified = false;
 
-    StageFile(Path path, StageFile... dependsOn) {
+    StageFile(Path path, boolean optional, StageFile... dependsOn) {
         this.path = path;
+        this.optional = optional;
         this.dependsOn = dependsOn;
     }
 
@@ -42,8 +44,13 @@ final class StageFile {
     private Modification getModification() {
         if (modified)
             return modified("file '%s' was rebuilt", path.getFileName());
-        if (!Files.exists(path))
-            return modified("file '%s' does not exist", path.getFileName());
+        if (!Files.exists(path)) {
+            if (optional) {
+                return new NotModified(null);
+            } else {
+                return modified("file '%s' does not exist", path.getFileName());
+            }
+        }
         FileTime lastModified;
         try {
             lastModified = Files.getLastModifiedTime(path);
@@ -55,7 +62,7 @@ final class StageFile {
             if (depModification instanceof Modified) {
                 return depModification;
             } else if (depModification instanceof NotModified depFile) {
-                if (depFile.lastModified().compareTo(lastModified) > 0)
+                if (depFile.lastModified() != null && depFile.lastModified().compareTo(lastModified) > 0)
                     return modified("file '%s' is newer than '%s'", dep.path.getFileName(), path.getFileName());
             }
         }

@@ -12,6 +12,6 @@ final class Stages {
 
     StageFile file(String name, StageFile... dependsOn) {
         Path path = workDir.resolve(name);
-        return new StageFile(path, dependsOn);
+        return new StageFile(path, false, dependsOn);
     }
 }
