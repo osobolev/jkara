@@ -9,6 +9,8 @@ import java.util.List;
 
 final class CmdArgs {
 
+    private static final String DEFAULT_AUDIO = "audio.mp3";
+
     final Path rootDir;
     final Path dir;
     final String url;
@@ -38,7 +40,7 @@ final class CmdArgs {
     private static void help(String error) {
         System.out.println("Usage:");
         System.out.println("    jkara [-l language] [-s shifts] [-d dir] [-f file] URL [text]");
-        System.out.println("    jkara [-l language] [-s shifts] [-d dir] audio [text]");
+        System.out.println("    jkara [-l language] [-s shifts] [-d dir] [audio|audio text]");
         System.out.println("where");
         System.out.println("    language: en/de/fr/...");
         System.out.println("    shifts: used in vocals separation (more -> better quality/slower)");
@@ -77,10 +79,15 @@ final class CmdArgs {
                 i++;
             }
         }
-        if (positionalArgs.size() != 1 && positionalArgs.size() != 2) {
+        if (positionalArgs.size() > 2) {
             return error("Must have one (audio) or two (audio+text) positional arguments");
         }
-        String urlOrFile = positionalArgs.get(0);
+        String urlOrFile;
+        if (positionalArgs.size() > 0) {
+            urlOrFile = positionalArgs.get(0);
+        } else {
+            urlOrFile = null;
+        }
         Path text;
         if (positionalArgs.size() > 1) {
             text = Path.of(positionalArgs.get(1));
@@ -91,27 +98,35 @@ final class CmdArgs {
             text = null;
         }
         Path dir = dirArg == null ? Path.of(".") : Path.of(dirArg);
-        boolean isURL;
-        try {
-            new URL(urlOrFile);
-            isURL = true;
-        } catch (MalformedURLException ex) {
-            isURL = false;
-        }
         Path audio;
         String url;
-        if (isURL) {
-            url = urlOrFile;
-            if (fileArg == null) {
-                audio = dir.resolve("audio.mp3");
+        if (urlOrFile != null) {
+            boolean isURL;
+            try {
+                new URL(urlOrFile);
+                isURL = true;
+            } catch (MalformedURLException ex) {
+                isURL = false;
+            }
+            if (isURL) {
+                url = urlOrFile;
+                if (fileArg == null) {
+                    audio = dir.resolve(DEFAULT_AUDIO);
+                } else {
+                    audio = Path.of(fileArg);
+                }
             } else {
-                audio = Path.of(fileArg);
+                url = null;
+                audio = Path.of(urlOrFile);
+                if (!Files.exists(audio)) {
+                    return error(String.format("File '%s' does not exist", audio));
+                }
             }
         } else {
             url = null;
-            audio = Path.of(urlOrFile);
+            audio = dir.resolve(DEFAULT_AUDIO);
             if (!Files.exists(audio)) {
-                return error(String.format("File '%s' does not exist", audio));
+                return error(String.format("Default file '%s' does not exist, copy it or download from Youtube", audio));
             }
         }
         Path rootDir = rootDirArg == null ? Path.of(".") : Path.of(rootDirArg);
