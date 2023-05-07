@@ -59,11 +59,16 @@ public final class AssJoiner {
         return result;
     }
 
-    private static DialogLine joinLines(List<DialogLine> lines, int mainIndex, Double nextStart,
+    private static DialogLine joinLines(List<DialogLine> lines, int mainIndex,
+                                        Double silenceBefore, Double nextStart,
                                         IntPredicate useColor, Function<Boolean, String> getColor) {
         Map<String, String> fields1 = lines.get(mainIndex).fields();
         StringBuilder buf = new StringBuilder();
         double start = lines.get(mainIndex).start();
+        if (silenceBefore != null) {
+            start -= silenceBefore.doubleValue();
+            Util.appendK(buf, silenceBefore.doubleValue());
+        }
         for (int i = 0; i < lines.size(); i++) {
             DialogLine line = lines.get(i);
             if (i > 0) {
@@ -119,8 +124,17 @@ public final class AssJoiner {
     public static List<DialogLine> join(ParsedAss parsed) {
         List<List<DialogLine>> groups = splitByPauses(parsed.getLines(), 2.5); // todo: extract to parameter
         List<DialogLine> newLines = new ArrayList<>();
+        double prevEnd = 0;
         for (List<DialogLine> group : groups) {
             for (int i = 0; i < group.size(); i++) {
+                DialogLine line = group.get(i);
+                Double silenceBefore;
+                if (i == 0) {
+                    double sincePrev = line.start() - prevEnd;
+                    silenceBefore = Math.min(0.75, sincePrev); // todo: extract to parameter
+                } else {
+                    silenceBefore = null;
+                }
                 int rem = i % 4;
                 List<DialogLine> join = switch (rem) {
                     case 0 -> join(subList(group, i, i + 1), empty(2));
@@ -129,7 +143,6 @@ public final class AssJoiner {
                     case 3 -> join(subList(group, i + 1, i + 2), subList(group, i - 1, i));
                     default -> Collections.emptyList();
                 };
-                DialogLine line = group.get(i);
                 String styleName = line.fields().getOrDefault("Style", "Default");
                 AssStyle style = parsed.styles.styles.get(styleName);
                 String primary;
@@ -149,11 +162,12 @@ public final class AssJoiner {
                     nextStart = null;
                 }
                 DialogLine newLine = joinLines(
-                    join, rem, nextStart,
+                    join, rem, silenceBefore, nextStart,
                     j -> rem == 3 && (j == 0 || j == 1),
                     before -> before.booleanValue() ? secondary : primary
                 );
                 newLines.add(newLine);
+                prevEnd = newLine.end();
             }
         }
         return newLines;
