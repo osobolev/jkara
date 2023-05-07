@@ -60,6 +60,7 @@ public final class KaraPipe {
             "--output", audio.toString(),
             url
         );
+        log(String.format("Audio downloaded to %s", audio));
     }
 
     private static String nameWithoutExtension(Path path) {
