@@ -15,7 +15,7 @@ public final class AssSyncTest {
         Path aligned = Path.of("C:\\home\\projects\\my\\jkara\\work\\rammstein\\aligned.json");
 
         StringWriter sw = new StringWriter();
-        AssSync.sync(text, aligned, text, () -> sw);
+        AssSync.sync(text, text, aligned, () -> sw);
         System.out.println(sw);
     }
 }
