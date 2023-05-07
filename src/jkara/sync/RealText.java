@@ -1,12 +1,11 @@
 package jkara.sync;
 
-import java.io.BufferedReader;
+import jkara.util.Util;
+
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 final class RealText {
 
@@ -17,10 +16,7 @@ final class RealText {
     }
 
     static RealText read(Path file) throws IOException {
-        String str;
-        try (BufferedReader rdr = Files.newBufferedReader(file)) {
-            str = rdr.lines().collect(Collectors.joining("\n"));
-        }
+        String str = Util.readLyrics(file);
         List<CWS> buf = new ArrayList<>();
         Normalizer.append(buf, str, null);
         Normalizer.finish(buf);
