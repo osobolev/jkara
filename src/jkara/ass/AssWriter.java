@@ -2,6 +2,7 @@ package jkara.ass;
 
 import ass.model.DialogLine;
 import jkara.util.OutputFactory;
+import jkara.util.Util;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -41,7 +42,7 @@ final class AssWriter {
     }
 
     private static void append(StringBuilder buf, double start, double end) {
-        DialogLine.appendK(buf, end - start);
+        Util.appendK(buf, end - start);
     }
 
     private static String assLine(List<CSegment> line) {

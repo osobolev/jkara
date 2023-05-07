@@ -31,9 +31,9 @@ public final class DialogSection extends IAssSection {
         pw.println(name);
         if (format != null) {
             pw.println("Format: " + String.join(", ", format.fields()));
-        }
-        for (DialogLine line : lines) {
-            pw.println(line.formatAss(format));
+            for (DialogLine line : lines) {
+                pw.println(line.formatAss(format));
+            }
         }
         pw.println();
     }

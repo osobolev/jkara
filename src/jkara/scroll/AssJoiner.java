@@ -1,6 +1,7 @@
 package jkara.scroll;
 
 import ass.model.DialogLine;
+import jkara.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +56,7 @@ final class AssJoiner {
         for (DialogLine line : lines) {
             if (prev != null) {
                 double gap = line.start() - (prev.start() + prev.sumLen());
-                DialogLine.appendK(buf, gap);
+                Util.appendK(buf, gap);
                 buf.append("\\N");
             }
             buf.append(line.text());
@@ -85,7 +86,7 @@ final class AssJoiner {
                 buf.append(line.text());
                 if (next != null) {
                     double gap = next.start() - (line.start() + line.sumLen());
-                    DialogLine.appendK(buf, gap);
+                    Util.appendK(buf, gap);
                 }
             } else if (line != null) {
                 buf.append(line.rawText());

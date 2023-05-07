@@ -3,6 +3,7 @@ package ass.model;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,6 +15,10 @@ public record DialogLine(
     String rawText,
     double sumLen
 ) {
+
+    public static final String START = "Start";
+    public static final String END = "End";
+    public static final String TEXT = "Text";
 
     private static final Pattern K_TAG = Pattern.compile("\\\\\\s*k[a-z]*\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
 
@@ -43,33 +48,6 @@ public record DialogLine(
         return new DialogLine(fields, start, end, text, rawText, sumLen / 100.0);
     }
 
-    public static DialogLine create(Map<String, String> fields0, double start, double end, String text) {
-        Map<String, String> fields = new HashMap<>(fields0);
-        fields.put("Start", formatTimestamp(start));
-        fields.put("End", formatTimestamp(end));
-        fields.put("Text", text);
-        return doCreate(fields, start, end, text);
-    }
-
-    private static final Pattern TS_FORMAT = Pattern.compile("(\\d+):(\\d+):(\\d+\\.\\d+)");
-
-    private static double parseTimestamp(String str) {
-        Matcher matcher = TS_FORMAT.matcher(str);
-        if (!matcher.matches())
-            throw new IllegalStateException("Wrong timestamp format: " + str);
-        int hour = Integer.parseInt(matcher.group(1));
-        int minute = Integer.parseInt(matcher.group(2));
-        double second = Double.parseDouble(matcher.group(3));
-        return (hour * 60.0 + minute) * 60.0 + second;
-    }
-
-    public static DialogLine create(Map<String, String> fields) {
-        double start = parseTimestamp(fields.get("Start"));
-        double end = parseTimestamp(fields.get("End"));
-        String text = fields.get("Text");
-        return doCreate(fields, start, end, text);
-    }
-
     public static String formatTimestamp(double ts) {
         long totalSecs = (long) ts;
         double secs = totalSecs % 60 + (ts - totalSecs);
@@ -79,11 +57,33 @@ public record DialogLine(
         return String.format(Locale.ROOT, "%s:%02d:%05.2f", hours, mins, secs);
     }
 
-    public static void appendK(StringBuilder buf, double len) {
-        long k = Math.round(len * 100);
-        if (k <= 0)
-            return;
-        buf.append(String.format("{\\k%s}", k));
+    public static DialogLine create(Map<String, String> fields0, double start, double end, String text) {
+        Objects.requireNonNull(text, "Missing text");
+        Map<String, String> fields = new HashMap<>(fields0);
+        fields.put(START, formatTimestamp(start));
+        fields.put(END, formatTimestamp(end));
+        fields.put(TEXT, text);
+        return doCreate(fields, start, end, text);
+    }
+
+    private static final Pattern TS_FORMAT = Pattern.compile("(\\d+):(\\d+):(\\d+\\.\\d+)");
+
+    public static double parseTimestamp(String str) {
+        Objects.requireNonNull(str, "Missing timestamp");
+        Matcher matcher = TS_FORMAT.matcher(str);
+        if (!matcher.matches())
+            throw new IllegalArgumentException("Wrong timestamp format: " + str);
+        int hour = Integer.parseInt(matcher.group(1));
+        int minute = Integer.parseInt(matcher.group(2));
+        double second = Double.parseDouble(matcher.group(3));
+        return (hour * 60.0 + minute) * 60.0 + second;
+    }
+
+    public static DialogLine create(Map<String, String> fields) {
+        double start = parseTimestamp(fields.get(START));
+        double end = parseTimestamp(fields.get(END));
+        String text = fields.getOrDefault(TEXT, "");
+        return doCreate(fields, start, end, text);
     }
 
     public String formatAss(SectionFormat format) {
