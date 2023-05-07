@@ -58,7 +58,7 @@ public final class TextSync {
         Patch<CWS> diff = DiffUtils.diff(fast, real, factory.create((cw1, cw2) -> cw1.ch == cw2.ch), null, true);
         for (AbstractDelta<CWS> delta : diff.getDeltas()) {
             switch (delta.getType()) {
-            case INSERT: {
+            case INSERT -> {
                 Chunk<CWS> fastChunk = delta.getSource();
                 Chunk<CWS> realChunk = delta.getTarget();
                 int position = fastChunk.getPosition();
@@ -71,18 +71,16 @@ public final class TextSync {
                     segment = null;
                 }
                 setSegment(segment, realChunk.getLines(), position);
-                break;
             }
-            case DELETE:
-                break;
-            case CHANGE: {
+            case DELETE -> {
+            }
+            case CHANGE -> {
                 Chunk<CWS> fastChunk = delta.getSource();
                 Chunk<CWS> realChunk = delta.getTarget();
                 Integer segment = segment(fastChunk.getLines());
                 setSegment(segment, realChunk.getLines(), fastChunk.getPosition());
-                break;
             }
-            case EQUAL: {
+            case EQUAL -> {
                 Chunk<CWS> fastChunk = delta.getSource();
                 Chunk<CWS> realChunk = delta.getTarget();
                 for (int i = 0; i < fastChunk.getLines().size(); i++) {
