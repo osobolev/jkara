@@ -18,12 +18,30 @@ public final class AssParser {
         this.lines = lines;
     }
 
-    private IAssSection parseAnySection(ISectionParser lineParser) {
-        String line0 = lines.get(i++);
+    private boolean eof() {
+        return i >= lines.size();
+    }
+
+    private String line() {
+        String line = lines.get(i);
+        if (i == 0 && line.startsWith("\uFEFF")) {
+            return line.substring(1);
+        } else {
+            return line;
+        }
+    }
+
+    private static boolean isSectionStart(String line) {
+        return line.trim().startsWith("[");
+    }
+
+    private IAssSection parseSection(ISectionParser lineParser) {
+        String line0 = line();
+        i++;
         lineParser.header(line0);
-        while (i < lines.size()) {
-            String line = lines.get(i);
-            if (line.trim().startsWith("["))
+        while (!eof()) {
+            String line = line();
+            if (isSectionStart(line))
                 break;
             lineParser.parseLine(line);
             i++;
@@ -33,17 +51,17 @@ public final class AssParser {
 
     public ParsedAss parse() {
         List<String> header = new ArrayList<>();
-        while (i < lines.size()) {
-            String line = lines.get(i);
-            if (line.trim().startsWith("["))
+        while (!eof()) {
+            String line = line();
+            if (isSectionStart(line))
                 break;
             header.add(line);
             i++;
         }
 
         List<IAssSection> sections = new ArrayList<>();
-        while (i < lines.size()) {
-            String line = lines.get(i);
+        while (!eof()) {
+            String line = line();
             String sectionName = line.trim();
             ISectionParser lineParser;
             switch (sectionName) {
@@ -51,7 +69,7 @@ public final class AssParser {
             case "[Events]" -> lineParser = new DialogSectionParser();
             default -> lineParser = new OpaqueSectionParser();
             }
-            IAssSection section = parseAnySection(lineParser);
+            IAssSection section = parseSection(lineParser);
             sections.add(section);
         }
         return new ParsedAss(header, sections);
