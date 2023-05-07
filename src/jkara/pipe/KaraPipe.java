@@ -8,6 +8,7 @@ import jkara.sync.TextSync;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -135,7 +136,7 @@ public final class KaraPipe {
         StageFile scroll = stages.file("karaoke.ass", ass);
         if (isStage("Creating karaoke subtitles", scroll)) {
             // todo: modify subs for scrolling:
-            Files.copy(ass.input(), scroll.output());
+            Files.copy(ass.input(), scroll.output(), StandardCopyOption.REPLACE_EXISTING);
         }
         StageFile karaoke = stages.file("karaoke.mp4", noVocals, scroll);
         if (isStage("Building karaoke video", karaoke)) {
