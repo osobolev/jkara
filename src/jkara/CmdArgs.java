@@ -54,6 +54,10 @@ final class CmdArgs {
         throw new ArgException(message);
     }
 
+    private static Path dir(String dirStr) {
+        return dirStr == null ? Path.of(".") : Path.of(dirStr);
+    }
+
     private static CmdArgs doParse(String[] args) throws ArgException {
         List<String> positionalArgs = new ArrayList<>();
         String rootDirArg = null;
@@ -97,7 +101,7 @@ final class CmdArgs {
         } else {
             text = null;
         }
-        Path dir = dirArg == null ? Path.of(".") : Path.of(dirArg);
+        Path dir = dir(dirArg);
         Path audio;
         String url;
         if (urlOrFile != null) {
@@ -129,7 +133,7 @@ final class CmdArgs {
                 return error(String.format("Default file '%s' does not exist, copy it or download from Youtube", audio));
             }
         }
-        Path rootDir = rootDirArg == null ? Path.of(".") : Path.of(rootDirArg);
+        Path rootDir = dir(rootDirArg);
         return new CmdArgs(rootDir, dir, url, audio, shiftsArg, langArg, text);
     }
 
