@@ -126,7 +126,7 @@ public final class KaraPipe {
             TextSync.sync(text.input(), fastJson.input(), () -> Files.newBufferedWriter(textJson.output()));
         }
         StageFile alignedJson = stages.file("aligned.json", vocals, textJson);
-        if (isStage("Performing alignment...", alignedJson)) {
+        if (isStage("Performing alignment", alignedJson)) {
             runner.runPython(
                 "scripts/align.py",
                 vocals.input().toString(), textJson.input().toString(), alignedJson.output().toString()
