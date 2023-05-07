@@ -60,14 +60,17 @@ public final class AssJoiner {
     }
 
     private static DialogLine joinLines(List<DialogLine> lines, int mainIndex,
-                                        Double silenceBefore, Double nextStart,
+                                        Double silenceBefore, String lineBefore, Double nextStart,
                                         IntPredicate useColor, Function<Boolean, String> getColor) {
         Map<String, String> fields1 = lines.get(mainIndex).fields();
         StringBuilder buf = new StringBuilder();
         double start = lines.get(mainIndex).start();
         if (silenceBefore != null) {
             start -= silenceBefore.doubleValue();
-            Util.appendK(buf, silenceBefore.doubleValue());
+            Util.appendK(buf, "K", silenceBefore.doubleValue());
+            if (lineBefore != null) {
+                buf.append(lineBefore);
+            }
         }
         for (int i = 0; i < lines.size(); i++) {
             DialogLine line = lines.get(i);
@@ -125,15 +128,26 @@ public final class AssJoiner {
         List<List<DialogLine>> groups = splitByPauses(parsed.getLines(), 2.5); // todo: extract to parameter
         List<DialogLine> newLines = new ArrayList<>();
         double prevEnd = 0;
-        for (List<DialogLine> group : groups) {
+        for (int gi = 0; gi < groups.size(); gi++) {
+            List<DialogLine> group = groups.get(gi);
             for (int i = 0; i < group.size(); i++) {
                 DialogLine line = group.get(i);
                 Double silenceBefore;
+                String lineBefore;
                 if (i == 0) {
                     double sincePrev = line.start() - prevEnd;
-                    silenceBefore = Math.min(0.75, sincePrev); // todo: extract to parameter
+                    double addSilence;
+                    if (gi == 0) {
+                        addSilence = 2.0; // todo: extract to parameter
+                        lineBefore = "----";
+                    } else {
+                        addSilence = 0.75; // todo: extract to parameter
+                        lineBefore = null;
+                    }
+                    silenceBefore = Math.min(addSilence, sincePrev);
                 } else {
                     silenceBefore = null;
+                    lineBefore = null;
                 }
                 int rem = i % 4;
                 List<DialogLine> join = switch (rem) {
@@ -162,7 +176,7 @@ public final class AssJoiner {
                     nextStart = null;
                 }
                 DialogLine newLine = joinLines(
-                    join, rem, silenceBefore, nextStart,
+                    join, rem, silenceBefore, lineBefore, nextStart,
                     j -> rem == 3 && (j == 0 || j == 1),
                     before -> before.booleanValue() ? secondary : primary
                 );
