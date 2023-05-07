@@ -164,14 +164,14 @@ public final class KaraPipe {
             );
 
             List<String> ffmpeg = new ArrayList<>();
-            ffmpeg.addAll(videoInput);
-            ffmpeg.addAll(audioInput);
+            ffmpeg.addAll(videoInput); // input 0
+            ffmpeg.addAll(audioInput); // input 1
             ffmpeg.addAll(List.of(
                 "-y", "-stats",
                 "-v", "quiet",
                 "-vf", "ass=" + escapeFilter(scroll.input().toString()),
-                "-map", "0:v:0",
-                "-map", "1:a:0",
+                "-map", "0:v:0", // video from input 0
+                "-map", "1:a:0", // audio from input 1
                 "-shortest",
                 "-c:v", "libx264",
                 "-c:a", "aac",
