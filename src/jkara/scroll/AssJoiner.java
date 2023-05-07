@@ -40,20 +40,6 @@ public final class AssJoiner {
         return result;
     }
 
-    private static List<List<DialogLine>> splitByCount(List<DialogLine> lines, int portion) {
-        List<List<DialogLine>> result = new ArrayList<>();
-        int i = 0;
-        while (i < lines.size()) {
-            List<DialogLine> group = new ArrayList<>();
-            for (int j = 0; j < portion && i < lines.size(); j++, i++) {
-                DialogLine line = lines.get(i);
-                group.add(line);
-            }
-            result.add(group);
-        }
-        return result;
-    }
-
     private static DialogLine joinLines(List<DialogLine> lines, int mainIndex,
                                         Double silenceBefore, String lineBefore, Double nextStart,
                                         IntPredicate useColor, Function<Boolean, String> getColor) {
