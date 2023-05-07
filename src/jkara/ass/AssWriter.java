@@ -1,7 +1,7 @@
 package jkara.ass;
 
+import ass.model.DialogLine;
 import jkara.util.OutputFactory;
-import jkara.util.Util;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -41,7 +41,7 @@ final class AssWriter {
     }
 
     private static void append(StringBuilder buf, double start, double end) {
-        Util.appendK(buf, end - start);
+        DialogLine.appendK(buf, end - start);
     }
 
     private static String assLine(List<CSegment> line) {
@@ -93,7 +93,7 @@ final class AssWriter {
         }
         return String.format(
             "Dialogue: 0,%s,%s,Default,,0,0,0,,%s",
-            Util.formatTimestamp(minStart), Util.formatTimestamp(maxEnd), buf
+            DialogLine.formatTimestamp(minStart), DialogLine.formatTimestamp(maxEnd), buf
         );
     }
 

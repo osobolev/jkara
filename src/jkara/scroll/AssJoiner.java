@@ -1,10 +1,10 @@
 package jkara.scroll;
 
-import jkara.util.Util;
+import ass.model.DialogLine;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 final class AssJoiner {
 
@@ -16,11 +16,11 @@ final class AssJoiner {
     //       3 *3  3     7
     //       4  4 *4     8
 
-    static List<List<AssLine>> splitByPauses(List<AssLine> lines, double pause) {
-        List<List<AssLine>> result = new ArrayList<>();
+    static List<List<DialogLine>> splitByPauses(List<DialogLine> lines, double pause) {
+        List<List<DialogLine>> result = new ArrayList<>();
         result.add(new ArrayList<>());
-        AssLine prev = null;
-        for (AssLine line : lines) {
+        DialogLine prev = null;
+        for (DialogLine line : lines) {
             if (prev != null) {
                 double diff = line.start() - prev.end();
                 if (diff >= pause) {
@@ -33,13 +33,13 @@ final class AssJoiner {
         return result;
     }
 
-    static List<List<AssLine>> splitByCount(List<AssLine> lines, int portion) {
-        List<List<AssLine>> result = new ArrayList<>();
+    static List<List<DialogLine>> splitByCount(List<DialogLine> lines, int portion) {
+        List<List<DialogLine>> result = new ArrayList<>();
         int i = 0;
         while (i < lines.size()) {
-            List<AssLine> group = new ArrayList<>();
+            List<DialogLine> group = new ArrayList<>();
             for (int j = 0; j < portion && i < lines.size(); j++, i++) {
-                AssLine line = lines.get(i);
+                DialogLine line = lines.get(i);
                 group.add(line);
             }
             result.add(group);
@@ -47,18 +47,15 @@ final class AssJoiner {
         return result;
     }
 
-    static AssLine join(List<AssLine> lines) {
-        String[] fields1 = lines.get(0).fields();
-        String[] fields = Arrays.copyOf(fields1, fields1.length);
+    static DialogLine join(List<DialogLine> lines) {
+        Map<String, String> fields1 = lines.get(0).fields();
         StringBuilder buf = new StringBuilder();
-        AssLine prev = null;
+        DialogLine prev = null;
         double start = lines.get(0).start();
-        for (AssLine line : lines) {
+        for (DialogLine line : lines) {
             if (prev != null) {
                 double gap = line.start() - (prev.start() + prev.sumLen());
-                if (gap > 0) {
-                    Util.appendK(buf, gap);
-                }
+                DialogLine.appendK(buf, gap);
                 buf.append("\\N");
             }
             buf.append(line.text());
@@ -66,8 +63,38 @@ final class AssJoiner {
         }
         String text = buf.toString();
         double end = lines.get(lines.size() - 1).end();
-        fields[1] = Util.formatTimestamp(start);
-        fields[2] = Util.formatTimestamp(end);
-        return AssLine.create(fields, start, end, text);
+        return DialogLine.create(fields1, start, end, text);
+    }
+
+    static DialogLine join2(List<DialogLine> lines, int mainIndex) {
+        Map<String, String> fields1 = lines.get(mainIndex).fields();
+        DialogLine next;
+        if (mainIndex + 1 < lines.size()) {
+            next = lines.get(mainIndex + 1);
+        } else {
+            next = null;
+        }
+        StringBuilder buf = new StringBuilder();
+        double start = lines.get(mainIndex).start();
+        for (int i = 0; i < lines.size(); i++) {
+            DialogLine line = lines.get(i);
+            if (i > 0) {
+                buf.append("\\N");
+            }
+            if (i == mainIndex) {
+                buf.append(line.text());
+                if (next != null) {
+                    double gap = next.start() - (line.start() + line.sumLen());
+                    DialogLine.appendK(buf, gap);
+                }
+            } else if (line != null) {
+                buf.append(line.rawText());
+            } else {
+                buf.append("\\h");
+            }
+        }
+        String text = buf.toString();
+        double end = next == null ? lines.get(mainIndex).end() : next.start();
+        return DialogLine.create(fields1, start, end, text);
     }
 }
