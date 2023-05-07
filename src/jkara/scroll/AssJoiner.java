@@ -6,6 +6,8 @@ import jkara.util.Util;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.IntPredicate;
 
 final class AssJoiner {
 
@@ -67,7 +69,8 @@ final class AssJoiner {
         return DialogLine.create(fields1, start, end, text);
     }
 
-    static DialogLine join2(List<DialogLine> lines, int mainIndex) {
+    static <T> DialogLine join2(List<DialogLine> lines, int mainIndex,
+                                IntPredicate useColor, Function<Boolean, String> getColor) {
         Map<String, String> fields1 = lines.get(mainIndex).fields();
         DialogLine next;
         if (mainIndex + 1 < lines.size()) {
@@ -89,7 +92,14 @@ final class AssJoiner {
                     Util.appendK(buf, gap);
                 }
             } else if (line != null) {
+                boolean color = useColor.test(i);
+                if (color) {
+                    buf.append("{\\c" + getColor.apply(true) + "&}");
+                }
                 buf.append(line.rawText());
+                if (color) {
+                    buf.append("{\\c" + getColor.apply(false) + "&}");
+                }
             } else {
                 buf.append("\\h");
             }
@@ -97,5 +107,9 @@ final class AssJoiner {
         String text = buf.toString();
         double end = next == null ? lines.get(mainIndex).end() : next.start();
         return DialogLine.create(fields1, start, end, text);
+    }
+
+    static DialogLine join2(List<DialogLine> lines, int mainIndex) {
+        return join2(lines, mainIndex, i -> false, before -> null);
     }
 }
