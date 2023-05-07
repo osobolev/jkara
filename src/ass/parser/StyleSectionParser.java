@@ -15,8 +15,13 @@ final class StyleSectionParser extends FormattedSectionParser {
     }
 
     @Override
-    protected void parseLine(SectionFormat format, String line) {
+    void parseLine(String line) {
         lines.add(line);
+        super.parseLine(line);
+    }
+
+    @Override
+    protected void parseLine(SectionFormat format, String line) {
         Map<String, String> map = new LineParser(line).parseLine("Style", format);
         if (map != null) {
             String name = null;
