@@ -69,8 +69,8 @@ final class AssJoiner {
         return DialogLine.create(fields1, start, end, text);
     }
 
-    static <T> DialogLine join2(List<DialogLine> lines, int mainIndex,
-                                IntPredicate useColor, Function<Boolean, String> getColor) {
+    static DialogLine join2(List<DialogLine> lines, int mainIndex,
+                            IntPredicate useColor, Function<Boolean, String> getColor) {
         Map<String, String> fields1 = lines.get(mainIndex).fields();
         DialogLine next;
         if (mainIndex + 1 < lines.size()) {
