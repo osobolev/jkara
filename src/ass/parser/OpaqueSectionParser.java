@@ -8,10 +8,12 @@ import java.util.List;
 
 final class OpaqueSectionParser extends ISectionParser {
 
+    private String name = null;
     private final List<String> lines = new ArrayList<>();
 
     @Override
     void header(String line) {
+        this.name = line;
         lines.add(line);
     }
 
@@ -22,6 +24,6 @@ final class OpaqueSectionParser extends ISectionParser {
 
     @Override
     IAssSection build() {
-        return new OpaqueSection(lines);
+        return new OpaqueSection(name, lines);
     }
 }

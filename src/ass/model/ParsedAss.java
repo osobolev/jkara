@@ -6,13 +6,11 @@ import java.util.List;
 
 public final class ParsedAss {
 
-    private final List<String> header;
     public final List<IAssSection> sections;
     public final StyleSection styles;
     public final DialogSection dialog;
 
-    public ParsedAss(List<String> header, List<IAssSection> sections) {
-        this.header = header;
+    public ParsedAss(List<IAssSection> sections) {
         this.sections = sections;
         StyleSection styles = null;
         DialogSection dialog = null;
@@ -36,7 +34,7 @@ public final class ParsedAss {
                 newSections.add(section);
             }
         }
-        return new ParsedAss(header, newSections);
+        return new ParsedAss(newSections);
     }
 
     public List<DialogLine> getLines() {
@@ -44,9 +42,6 @@ public final class ParsedAss {
     }
 
     public void write(PrintWriter pw) {
-        for (String line : header) {
-            pw.println(line);
-        }
         for (IAssSection section : sections) {
             section.write(pw);
         }
