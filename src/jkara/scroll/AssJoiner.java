@@ -121,10 +121,12 @@ public final class AssJoiner {
                     if (gi == 0) {
                         addSilence = 2.0; // todo: extract to parameter
                         starting = true;
-                        double initialSilence = line.start() - addSilence;
-                        if (initialSilence >= 2.5 && !titles.isEmpty()) {
-                            DialogLine titleLine = DialogLine.create(line.fields(), 0.0, 2.0, String.join("\\N", titles));
-                            newLines.add(titleLine);
+                        if (!titles.isEmpty()) {
+                            double titlesTime = Math.min(line.start() - addSilence - 1.0, 5.0);
+                            if (titlesTime >= 1.0) {
+                                DialogLine titleLine = DialogLine.create(line.fields(), 0.0, titlesTime, String.join("\\N", titles));
+                                newLines.add(titleLine);
+                            }
                         }
                     } else {
                         addSilence = 0.75; // todo: extract to parameter
