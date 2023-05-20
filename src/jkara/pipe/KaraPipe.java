@@ -116,6 +116,7 @@ public final class KaraPipe {
                 vocals.input().toString(), fastJson.output().toString(), language
             );
         }
+
         StageFile text;
         if (userText != null) {
             text = new StageFile(userText, false);
@@ -129,6 +130,7 @@ public final class KaraPipe {
         if (isStage("Synchronizing transcription with text", textJson)) {
             TextSync.sync(text.input(), fastJson.input(), () -> Files.newBufferedWriter(textJson.output()));
         }
+
         StageFile alignedJson = stages.file("aligned.json", vocals, textJson);
         if (isStage("Performing alignment", alignedJson)) {
             runner.runPython(
@@ -136,6 +138,7 @@ public final class KaraPipe {
                 vocals.input().toString(), textJson.input().toString(), alignedJson.output().toString()
             );
         }
+
         StageFile ass = stages.file("subs.ass", alignedJson, text);
         if (isStage("Creating subtitles", ass)) {
             AssSync.sync(
@@ -143,6 +146,7 @@ public final class KaraPipe {
                 () -> Files.newBufferedWriter(ass.output())
             );
         }
+
         StageFile infoJson = new StageFile(audio.resolveSibling(audio.getFileName() + ".info.json"), true);
         StageFile scroll = stages.file("karaoke.ass", ass, infoJson);
         if (isStage("Creating karaoke subtitles", scroll)) {
@@ -181,6 +185,7 @@ public final class KaraPipe {
             ));
             runner.runFFMPEG(ffmpeg);
         }
+
         long t1 = System.currentTimeMillis();
         log(String.format("Done in %s, result written to %s", duration(t1 - t0), karaoke.input()));
     }
