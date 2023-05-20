@@ -152,42 +152,47 @@ public final class KaraPipe {
         if (isStage("Creating karaoke subtitles", scroll)) {
             AssJoiner.join(ass.input(), infoJson.input(), scroll.output());
         }
-        StageFile karaoke = stages.file("karaoke.mp4", noVocals, scroll);
-        if (isStage("Building karaoke video", karaoke)) {
-            List<String> videoInput;
-            Path video = audio.resolveSibling(baseName + ".webm");
-            if (Files.exists(video)) {
-                videoInput = List.of("-i", video.toString());
-            } else {
-                // Используем виртуальное видео длиной 1 час, оно обрезается с помощью опции -shortest до длины аудио:
-                videoInput = List.of(
-                    "-f", "lavfi", "-i", "color=size=1280x720:duration=3600:rate=24:color=black"
-                );
-            }
-            List<String> audioInput = List.of(
-                "-i", noVocals.input().toString()
-            );
 
-            List<String> ffmpeg = new ArrayList<>();
-            ffmpeg.addAll(videoInput); // input 0
-            ffmpeg.addAll(audioInput); // input 1
-            ffmpeg.addAll(List.of(
-                "-y", "-stats",
-                "-v", "quiet",
-                "-vf", "ass=" + escapeFilter(scroll.input().toString()),
-                "-map", "0:v:0", // video from input 0
-                "-map", "1:a:0", // audio from input 1
-                "-shortest",
-                "-c:v", "libx264",
-                "-c:a", "aac",
-                "-b:a", "192k",
-                karaoke.output().toString()
-            ));
-            runner.runFFMPEG(ffmpeg);
+        StageFile video = new StageFile(audio.resolveSibling(baseName + ".webm"), true);
+        StageFile karaoke = stages.file("karaoke.mp4", noVocals, scroll, video);
+        if (isStage("Building karaoke video", karaoke)) {
+            makeVideo(video.input(), noVocals.input(), scroll.input(), karaoke.output());
         }
 
         long t1 = System.currentTimeMillis();
         log(String.format("Done in %s, result written to %s", duration(t1 - t0), karaoke.input()));
+    }
+
+    private void makeVideo(Path video, Path noVocals, Path scroll, Path karaoke) throws IOException, InterruptedException {
+        List<String> videoInput;
+        if (Files.exists(video)) {
+            videoInput = List.of("-i", video.toString());
+        } else {
+            // Используем виртуальное видео длиной 1 час, оно обрезается с помощью опции -shortest до длины аудио:
+            videoInput = List.of(
+                "-f", "lavfi", "-i", "color=size=1280x720:duration=3600:rate=24:color=black"
+            );
+        }
+        List<String> audioInput = List.of(
+            "-i", noVocals.toString()
+        );
+
+        List<String> ffmpeg = new ArrayList<>();
+        ffmpeg.addAll(videoInput); // input 0
+        ffmpeg.addAll(audioInput); // input 1
+        ffmpeg.addAll(List.of(
+            "-y", "-stats",
+            "-v", "quiet",
+            "-vf", "ass=" + escapeFilter(scroll.toString()),
+            "-map", "0:v:0", // video from input 0
+            "-map", "1:a:0", // audio from input 1
+            "-shortest",
+            "-c:v", "libx264", // todo: use copy for real video???
+            "-c:a", "aac", // todo: use same codec as source???
+            "-b:a", "192k", // todo: use same bitrate as source???
+            karaoke.toString()
+        ));
+        runner.runFFMPEG(ffmpeg);
     }
 
     private static String duration(long millis) {
