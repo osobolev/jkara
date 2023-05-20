@@ -78,12 +78,13 @@ public final class KaraPipe {
 
     /**
      * Pipeline:
-     * audio.mp3 -> demucs -> vocals.wav + no_vocals.wav
-     * vocals.wav -> fast_whisper -> fast.json (semi-accurate transcription)
-     * text.txt + fast.json -> TextSync -> text.json (real lyrics with timestamps from prev step)
-     * text.json -> whisperx -> aligned.json (character-level timestamps for real lyrics)
-     * aligned.json + text.txt -> AssSync -> ass file
-     * no_vocals.wav + ass file -> ffmpeg -> karaoke.mp4
+     * 1. audio.mp3 -> demucs -> vocals.wav + no_vocals.wav
+     * 2. vocals.wav -> fast_whisper -> fast.json (semi-accurate transcription)
+     * 3. text.txt + fast.json -> TextSync -> text.json (real lyrics with timestamps from prev step)
+     * 4. text.json -> whisperx -> aligned.json (character-level timestamps for real lyrics)
+     * 5. aligned.json + text.txt -> AssSync -> subs.ass (line-by-line subtitles suitable for manual editing)
+     * 6. subs.ass + info.json -> AssJoiner -> karaoke.ass (ready for karaoke subtitles)
+     * 7. no_vocals.wav + karaoke.ass -> ffmpeg -> karaoke.mp4
      */
     public void makeKaraoke(Path audio, String maybeShifts, String maybeLanguage, Path userText, Path workDir) throws IOException, InterruptedException, SyncException {
         long t0 = System.currentTimeMillis();
