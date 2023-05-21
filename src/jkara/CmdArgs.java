@@ -1,11 +1,15 @@
 package jkara;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 final class CmdArgs {
 
@@ -53,6 +57,27 @@ final class CmdArgs {
 
     private static Path dir(String dirStr) {
         return dirStr == null ? Path.of(".") : Path.of(dirStr);
+    }
+
+    private static void checkMP3(Path audio) throws ArgException {
+        byte[][] magics = {
+            {0x49, 0x44, 0x33}
+        };
+        int maxMagic = 0;
+        for (byte[] magic : magics) {
+            maxMagic = Math.max(maxMagic, magic.length);
+        }
+        try (InputStream is = Files.newInputStream(audio)) {
+            byte[] bytes = is.readNBytes(maxMagic);
+            boolean anyMagic = Stream.of(magics).anyMatch(
+                magic -> Arrays.equals(bytes, 0, magic.length, magic, 0, magic.length)
+            );
+            if (!anyMagic) {
+                error(String.format("File '%s' is not an MP3 file", audio));
+            }
+        } catch (IOException ex) {
+            error(String.format("Cannot open file '%s'", audio));
+        }
     }
 
     private static CmdArgs doParse(String[] args) throws ArgException {
@@ -113,6 +138,8 @@ final class CmdArgs {
                 audio = Path.of(urlOrFile);
                 if (!Files.exists(audio)) {
                     return error(String.format("File '%s' does not exist", audio));
+                } else {
+                    checkMP3(audio);
                 }
             }
         } else {
@@ -120,10 +147,22 @@ final class CmdArgs {
             audio = dir.resolve(DEFAULT_AUDIO);
             if (!Files.exists(audio)) {
                 return error(String.format("Default file '%s' does not exist, copy it or download from Youtube", audio));
+            } else {
+                checkMP3(audio);
             }
         }
-        Path rootDir = dir(rootDirArg);
-        return new CmdArgs(rootDir, dir, url, audio, shiftsArg, langArg, text);
+
+        Path text;
+        if (positionalArgs.size() > 1) {
+            text = Path.of(positionalArgs.get(1));
+            if (!Files.exists(text)) {
+                return error(String.format("File '%s' does not exist", text));
+            }
+        } else {
+            text = dir.resolve("text.txt");
+        }
+
+        return new CmdArgs(rootDir, dir, url, audio, language, text);
     }
 
     static CmdArgs parse(String[] args) {
