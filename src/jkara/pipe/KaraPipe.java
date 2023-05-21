@@ -9,16 +9,12 @@ import jkara.sync.SyncException;
 import jkara.sync.TextSync;
 
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,24 +31,67 @@ public final class KaraPipe {
         this.runner = new ProcRunner(ffmpeg, rootDir);
     }
 
-    private static String escapeFilter(String path) {
-        StringBuilder buf = new StringBuilder();
-        for (int i = 0; i < path.length(); i++) {
-            char ch = path.charAt(i);
-            if (ch == '\\') {
-                buf.append('/');
-            } else if (ch == ':') {
-                buf.append("\\\\:");
-            } else {
-                buf.append(ch);
-            }
-        }
-        return buf.toString();
-    }
-
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     private static void log(String message) {
         System.out.printf(">>>>> [%s] %s%n", LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")), message);
+    }
+
+    private static String nameWithoutExtension(String name) {
+        int dot = name.lastIndexOf('.');
+        return dot < 0 ? name : name.substring(0, dot);
+    }
+
+    private static Path video(Path audio, String suffix) {
+        String audioName = audio.getFileName().toString();
+        String baseName = nameWithoutExtension(audioName);
+        return audio.resolveSibling(baseName + suffix + ".webm");
+    }
+
+    private static Path video(Path audio) {
+        return video(audio, "");
+    }
+
+    public void downloadYoutube(String url, Path audio, boolean newProject) throws IOException, InterruptedException {
+        if (!newProject && Files.exists(audio)) {
+            log("Skipping downloading from Youtube as it is a repeated run");
+            return;
+        }
+        CutRange range = CutRange.create(url);
+        log(String.format("Downloading from Youtube%s...", range == null ? "" : " (range " + range + ")"));
+        Files.createDirectories(audio.getParent());
+        if (range == null) {
+            runner.runExe(
+                "yt-dlp",
+                "--write-info-json", "-k",
+                "--extract-audio",
+                "--audio-format", "mp3",
+                "--output", audio.toString(),
+                url
+            );
+        } else {
+            Path video = video(audio);
+            runner.runExe(
+                "yt-dlp",
+                "--write-info-json",
+                "--output", video.toString(),
+                url
+            );
+            log("Cutting downloaded video...");
+            CutRange realCut = range.getRealCut(runner, video);
+            Path cutVideo = video(audio, ".tmp");
+            realCut.doCut(runner, video, cutVideo);
+            Files.delete(video);
+            Files.move(cutVideo, video);
+            runner.runFFMPEG(List.of(
+                "-y", "-stats",
+                "-i", video.toString(),
+                "-vn",
+                "-b:a", "192k",
+                "-f", "mp3",
+                audio.toString()
+            ));
+        }
+        log(String.format("Audio downloaded to %s", audio));
     }
 
     private static boolean isStage(String log, StageFile... files) {
@@ -65,104 +104,6 @@ public final class KaraPipe {
             }
         }
         return false;
-    }
-
-    private static Map<String, String> queryParams(String url) {
-        Map<String, String> params = new HashMap<>();
-        int q = url.indexOf('?');
-        if (q < 0)
-            return params;
-        String[] pairs = url.substring(q + 1).split("&");
-        for (String pair : pairs) {
-            int idx = pair.indexOf('=');
-            if (idx <= 0)
-                continue;
-            String key = URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8);
-            String value = URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8);
-            params.put(key, value);
-        }
-        return params;
-    }
-
-    private static int parse(StringBuilder buf, String unit) {
-        int pos = buf.indexOf(unit);
-        if (pos > 0) {
-            int value = Integer.parseInt(buf.substring(0, pos));
-            buf.delete(0, pos + 1);
-            return value;
-        } else {
-            return 0;
-        }
-    }
-
-    private static long parseTime(String t) {
-        StringBuilder buf = new StringBuilder(t.trim());
-        long hours = parse(buf, "h");
-        long minutes = parse(buf, "m");
-        long seconds = parse(buf, "s");
-        if (!buf.isEmpty() && hours == 0 && minutes == 0 && seconds == 0) {
-            return Integer.parseInt(buf.toString());
-        }
-        return hours * 60 * 60 + minutes * 60 + seconds;
-    }
-
-    private static String range(String url) {
-        Map<String, String> params = queryParams(url);
-        String t = params.get("t");
-        String start = params.get("start");
-        String end = params.get("end");
-        Long secStart = null;
-        if (t != null) {
-            secStart = parseTime(t);
-        } else if (start != null) {
-            secStart = parseTime(start);
-        }
-        Long secEnd = null;
-        if (end != null) {
-            secEnd = parseTime(end);
-        }
-        if (secStart == null && secEnd == null)
-            return null;
-        StringBuilder buf = new StringBuilder();
-        if (secStart != null) {
-            buf.append(duration(secStart.longValue() * 1000L));
-        } else {
-            buf.append("0:00");
-        }
-        buf.append('-');
-        if (secEnd != null) {
-            buf.append(duration(secEnd.longValue() * 1000L));
-        } else {
-            buf.append("inf");
-        }
-        return buf.toString();
-    }
-
-    public void downloadYoutube(String url, Path audio, boolean newProject) throws IOException, InterruptedException {
-        if (!newProject && Files.exists(audio)) {
-            log("Skipping downloading from Youtube as it is a repeated run");
-            return;
-        }
-        String range = range(url);
-        log(String.format("Downloading from Youtube%s...", range == null ? "" : " (range " + range + ")"));
-        Files.createDirectories(audio.getParent());
-        List<String> args = new ArrayList<>(List.of(
-            "--write-info-json", "-k",
-            "--extract-audio",
-            "--audio-format", "mp3",
-            "--output", audio.toString()
-        ));
-        if (range != null) {
-            args.addAll(List.of("--download-sections", "*" + range));
-        }
-        args.add(url);
-        runner.runExe("yt-dlp", args);
-        log(String.format("Audio downloaded to %s", audio));
-    }
-
-    private static String nameWithoutExtension(String name) {
-        int dot = name.lastIndexOf('.');
-        return dot < 0 ? name : name.substring(0, dot);
     }
 
     /**
@@ -241,14 +182,29 @@ public final class KaraPipe {
             AssJoiner.join(ass.input(), infoJson.input(), scroll.output());
         }
 
-        StageFile video = new StageFile(audio.input().resolveSibling(baseName + ".webm"), true);
+        StageFile video = new StageFile(video(audio.input()), true);
         StageFile karaoke = stages.file("karaoke.mp4", noVocals, scroll, video);
         if (isStage("Building karaoke video", karaoke)) {
             makeVideo(video.input(), noVocals.input(), scroll.input(), karaoke.output());
         }
 
         long t1 = System.currentTimeMillis();
-        log(String.format("Done in %s, result written to %s", duration(t1 - t0), karaoke.input()));
+        log(String.format("Done in %s, result written to %s", CutRange.duration(t1 - t0), karaoke.input()));
+    }
+
+    private static String escapeFilter(String path) {
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < path.length(); i++) {
+            char ch = path.charAt(i);
+            if (ch == '\\') {
+                buf.append('/');
+            } else if (ch == ':') {
+                buf.append("\\\\:");
+            } else {
+                buf.append(ch);
+            }
+        }
+        return buf.toString();
     }
 
     private void makeVideo(Path video, Path noVocals, Path scroll, Path karaoke) throws IOException, InterruptedException {
@@ -270,7 +226,6 @@ public final class KaraPipe {
         ffmpeg.addAll(audioInput); // input 1
         ffmpeg.addAll(List.of(
             "-y", "-stats",
-            "-v", "quiet",
             "-vf", "ass=" + escapeFilter(scroll.toString()),
             "-map", "0:v:0", // video from input 0
             "-map", "1:a:0", // audio from input 1
@@ -281,19 +236,6 @@ public final class KaraPipe {
             karaoke.toString()
         ));
         runner.runFFMPEG(ffmpeg);
-    }
-
-    private static String duration(long millis) {
-        long totalSeconds = millis / 1000;
-        long seconds = totalSeconds % 60;
-        long totalMinutes = totalSeconds / 60;
-        long minutes = totalMinutes % 60;
-        long hours = totalMinutes / 60;
-        if (hours > 0) {
-            return String.format("%s:%02d:%02d", hours, minutes, seconds);
-        } else {
-            return String.format("%s:%02d", minutes, seconds);
-        }
     }
 
     public void copyOptions(Path workDir) throws IOException {

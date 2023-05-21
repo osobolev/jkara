@@ -8,6 +8,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.IntPredicate;
 
 final class ProcRunner {
 
@@ -31,17 +33,27 @@ final class ProcRunner {
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    private void runCommand(String what, List<String> args) throws IOException, InterruptedException {
+    private void runCommand(String what, List<String> args, Consumer<Process> out, IntPredicate exitOk) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(args);
         if (ffmpegDir != null) {
             String path = pb.environment().get("PATH");
             pb.environment().put("PATH", path == null ? ffmpegDir.toString() : ffmpegDir + File.pathSeparator + path);
         }
         Process p = pb.start();
-        capture(p.getInputStream(), System.out);
         capture(p.getErrorStream(), System.err);
+        if (out != null) {
+            out.accept(p);
+        } else {
+            capture(p.getInputStream(), System.out);
+        }
         int exitCode = p.waitFor();
-        if (exitCode != 0)
+        boolean ok;
+        if (exitOk != null) {
+            ok = exitOk.test(exitCode);
+        } else {
+            ok = exitCode == 0;
+        }
+        if (!ok)
             throw new IOException("Error running " + what + ": " + exitCode);
     }
 
@@ -50,26 +62,34 @@ final class ProcRunner {
         list.add("python");
         list.add(rootDir.resolve(script).toString());
         list.addAll(Arrays.asList(args));
-        runCommand("script " + script, list);
+        runCommand("script " + script, list, null, null);
     }
 
     void runExe(String exe, List<String> args) throws IOException, InterruptedException {
         List<String> list = new ArrayList<>();
         list.add(exe);
         list.addAll(args);
-        runCommand(exe, list);
+        runCommand(exe, list, null, null);
     }
 
     void runExe(String exe, String... args) throws IOException, InterruptedException {
         runExe(exe, Arrays.asList(args));
     }
 
-    void runFFMPEG(List<String> args) throws IOException, InterruptedException {
+    private void runFF(String ff, List<String> args, Consumer<Process> out, IntPredicate exitOk) throws IOException, InterruptedException {
         List<String> list = new ArrayList<>();
-        String ffmpeg = "ffmpeg";
-        String ffmpegPath = ffmpegDir == null ? ffmpeg : ffmpegDir.resolve(ffmpeg).toString();
-        list.add(ffmpegPath);
+        String ffPath = ffmpegDir == null ? ff : ffmpegDir.resolve(ff).toString();
+        list.add(ffPath);
+        list.addAll(List.of("-v", "quiet")); // todo: add -stats???
         list.addAll(args);
-        runCommand("ffmpeg", list);
+        runCommand(ff, list, out, exitOk);
+    }
+
+    void runFFMPEG(List<String> args) throws IOException, InterruptedException {
+        runFF("ffmpeg", args, null, null);
+    }
+
+    void runFFProbe(List<String> args, Consumer<Process> out, IntPredicate exitOk) throws IOException, InterruptedException {
+        runFF("ffprobe", args, out, exitOk);
     }
 }
