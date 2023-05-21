@@ -77,8 +77,7 @@ public final class KaraPipe {
         log(String.format("Audio downloaded to %s", audio));
     }
 
-    private static String nameWithoutExtension(Path path) {
-        String name = path.getFileName().toString();
+    private static String nameWithoutExtension(String name) {
         int dot = name.lastIndexOf('.');
         return dot < 0 ? name : name.substring(0, dot);
     }
@@ -93,12 +92,15 @@ public final class KaraPipe {
      * 6. subs.ass + [info.json] -> AssJoiner -> karaoke.ass (ready for karaoke subtitles)
      * 7. no_vocals.wav + karaoke.ass + [audio.webm] -> ffmpeg -> karaoke.mp4
      */
-    public void makeKaraoke(Path audio, String maybeShifts, String maybeLanguage, Path userText, Path workDir) throws IOException, InterruptedException, SyncException {
+    public void makeKaraoke(Path audioInput, String maybeLanguage, Path textInput, Path workDir) throws IOException, InterruptedException, SyncException {
         long t0 = System.currentTimeMillis();
         Files.createDirectories(workDir);
         Stages stages = new Stages(rootDir, workDir);
 
-        String baseName = nameWithoutExtension(audio);
+        StageFile audio = new StageFile(audioInput);
+
+        String audioName = audio.input().getFileName().toString();
+        String baseName = nameWithoutExtension(audioName);
         String demucsDir = "htdemucs/" + baseName;
         StageValue<ODemucs> demucsOpts = stages.options("demucs", ODemucs.class);
         StageFile vocals = stages.file(demucsDir + "/vocals.wav", audio, demucsOpts);
@@ -109,7 +111,7 @@ public final class KaraPipe {
                 "--two-stems=vocals",
                 "--shifts=" + demucsOpts.value().shifts(),
                 "--out=" + workDir,
-                audio.toString()
+                audio.input().toString()
             );
             vocals.output();
             noVocals.output();
