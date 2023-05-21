@@ -152,13 +152,13 @@ public final class KaraPipe {
             );
         }
 
-        StageFile infoJson = new StageFile(audio.resolveSibling(audio.getFileName() + ".info.json"), true);
+        StageFile infoJson = new StageFile(audio.input().resolveSibling(audioName + ".info.json"), true);
         StageFile scroll = stages.file("karaoke.ass", ass, infoJson);
         if (isStage("Creating karaoke subtitles", scroll)) {
             AssJoiner.join(ass.input(), infoJson.input(), scroll.output());
         }
 
-        StageFile video = new StageFile(audio.resolveSibling(baseName + ".webm"), true);
+        StageFile video = new StageFile(audio.input().resolveSibling(baseName + ".webm"), true);
         StageFile karaoke = stages.file("karaoke.mp4", noVocals, scroll, video);
         if (isStage("Building karaoke video", karaoke)) {
             makeVideo(video.input(), noVocals.input(), scroll.input(), karaoke.output());
