@@ -59,7 +59,11 @@ public final class KaraPipe {
         return false;
     }
 
-    public void downloadYoutube(String url, Path audio) throws IOException, InterruptedException {
+    public void downloadYoutube(String url, Path audio, boolean newProject) throws IOException, InterruptedException {
+        if (!newProject && Files.exists(audio)) {
+            log("Skipping downloading from Youtube as it is a repeated run");
+            return;
+        }
         log("Downloading from Youtube...");
         Files.createDirectories(audio.getParent());
         runner.runExe(

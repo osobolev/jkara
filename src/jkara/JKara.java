@@ -40,7 +40,7 @@ public final class JKara {
 
             KaraPipe pipe = new KaraPipe(null, cmd.rootDir);
             if (cmd.url != null) {
-                pipe.downloadYoutube(cmd.url, cmd.audio);
+                pipe.downloadYoutube(cmd.url, cmd.audio, newProject);
             }
             pipe.makeKaraoke(cmd.audio, cmd.language, cmd.text, cmd.dir);
         } catch (SyncException ex) {
