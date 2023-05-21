@@ -15,16 +15,14 @@ final class CmdArgs {
     final Path dir;
     final String url;
     final Path audio;
-    final String shifts;
     final String language;
     final Path text;
 
-    private CmdArgs(Path rootDir, Path dir, String url, Path audio, String shifts, String language, Path text) {
+    private CmdArgs(Path rootDir, Path dir, String url, Path audio, String language, Path text) {
         this.rootDir = rootDir;
         this.dir = dir;
         this.url = url;
         this.audio = audio;
-        this.shifts = shifts;
         this.language = language;
         this.text = text;
     }
@@ -39,11 +37,10 @@ final class CmdArgs {
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     private static void help(String error) {
         System.out.println("Usage:");
-        System.out.println("    jkara [-l language] [-s shifts] [-d dir] [-f file] URL [text]");
-        System.out.println("    jkara [-l language] [-s shifts] [-d dir] [audio|audio text]");
+        System.out.println("    jkara [-l language] [-d dir] [-f file] URL [text]");
+        System.out.println("    jkara [-l language] [-d dir] [audio|audio text]");
         System.out.println("where");
         System.out.println("    language: en/de/fr/...");
-        System.out.println("    shifts: used in vocals separation (more -> better quality/slower)");
         if (error != null) {
             System.out.println();
             System.out.println(error);
@@ -63,8 +60,7 @@ final class CmdArgs {
         String rootDirArg = null;
         String dirArg = null;
         String fileArg = null;
-        String langArg = null;
-        String shiftsArg = null;
+        String language = null;
         for (int i = 0; i < args.length; ) {
             String arg = args[i];
             if (arg.startsWith("-") && i + 1 < args.length) {
@@ -73,8 +69,7 @@ final class CmdArgs {
                 case "-r" -> rootDirArg = value;
                 case "-d" -> dirArg = value;
                 case "-f" -> fileArg = value;
-                case "-l" -> langArg = value;
-                case "-s" -> shiftsArg = value;
+                case "-l" -> language = value;
                 default -> error("Unexpected option " + arg);
                 }
                 i += 2;
@@ -86,22 +81,16 @@ final class CmdArgs {
         if (positionalArgs.size() > 2) {
             return error("Must have one (audio) or two (audio+text) positional arguments");
         }
+
+        Path rootDir = dir(rootDirArg);
+        Path dir = dir(dirArg);
+
         String urlOrFile;
         if (positionalArgs.size() > 0) {
             urlOrFile = positionalArgs.get(0);
         } else {
             urlOrFile = null;
         }
-        Path text;
-        if (positionalArgs.size() > 1) {
-            text = Path.of(positionalArgs.get(1));
-            if (!Files.exists(text)) {
-                return error(String.format("File '%s' does not exist", text));
-            }
-        } else {
-            text = null;
-        }
-        Path dir = dir(dirArg);
         Path audio;
         String url;
         if (urlOrFile != null) {

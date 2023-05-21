@@ -1,6 +1,7 @@
 package jkara.pipe;
 
 import jkara.ass.AssSync;
+import jkara.opts.ODemucs;
 import jkara.scroll.AssJoiner;
 import jkara.sync.FastText;
 import jkara.sync.SyncException;
@@ -18,10 +19,12 @@ import java.util.stream.Stream;
 
 public final class KaraPipe {
 
+    private final Path rootDir;
     private final ProcRunner runner;
 
-    public KaraPipe(Path ffmpeg, Path scriptDir) {
-        this.runner = new ProcRunner(ffmpeg, scriptDir);
+    public KaraPipe(Path ffmpeg, Path rootDir) {
+        this.rootDir = rootDir;
+        this.runner = new ProcRunner(ffmpeg, rootDir);
     }
 
     private static String escapeFilter(String path) {
@@ -89,18 +92,18 @@ public final class KaraPipe {
     public void makeKaraoke(Path audio, String maybeShifts, String maybeLanguage, Path userText, Path workDir) throws IOException, InterruptedException, SyncException {
         long t0 = System.currentTimeMillis();
         Files.createDirectories(workDir);
-        Stages stages = new Stages(workDir);
+        Stages stages = new Stages(rootDir, workDir);
 
         String baseName = nameWithoutExtension(audio);
         String demucsDir = "htdemucs/" + baseName;
-        StageFile vocals = stages.file(demucsDir + "/vocals.wav");
-        StageFile noVocals = stages.file(demucsDir + "/no_vocals.wav");
+        StageValue<ODemucs> demucsOpts = stages.options("demucs", ODemucs.class);
+        StageFile vocals = stages.file(demucsDir + "/vocals.wav", audio, demucsOpts);
+        StageFile noVocals = stages.file(demucsDir + "/no_vocals.wav", audio, demucsOpts);
         if (isStage("Separating vocals and instrumental", vocals, noVocals)) {
-            String shifts = maybeShifts == null ? "1" : maybeShifts;
             runner.runExe(
                 "demucs",
                 "--two-stems=vocals",
-                "--shifts=" + shifts,
+                "--shifts=" + demucsOpts.value().shifts(),
                 "--out=" + workDir,
                 audio.toString()
             );
