@@ -41,8 +41,9 @@ final class CmdArgs {
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     private static void help(String error) {
         System.out.println("Usage:");
-        System.out.println("    jkara [-l language] [-d dir] [-f file] URL [text]");
-        System.out.println("    jkara [-l language] [-d dir] [audio|audio text]");
+        System.out.println("    jkara [-l <language>] [-d <dir>] [-f <file>] <URL> [<text>]");
+        System.out.println("    jkara [-l <language>] [-d <dir>] [<audio>|<audio> <text>]");
+        System.out.println("    jkara [-d <dir>] options");
         System.out.println("where");
         System.out.println("    language: en/de/fr/...");
         if (error != null) {
@@ -109,6 +110,10 @@ final class CmdArgs {
 
         Path rootDir = dir(rootDirArg);
         Path dir = dir(dirArg);
+
+        if (positionalArgs.size() == 1 && "options".equalsIgnoreCase(positionalArgs.get(0))) {
+            return new CmdArgs(rootDir, dir, null, null, null, null);
+        }
 
         String urlOrFile;
         if (positionalArgs.size() > 0) {

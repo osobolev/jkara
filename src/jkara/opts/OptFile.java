@@ -81,9 +81,13 @@ public final class OptFile<O extends Record> {
         }
     }
 
-    public static <O extends Record> OptFile<O> read(Path rootDir, Path dir, String name, Class<O> cls) throws IOException {
+    public static Path path(Path dir, String name) {
         String fileName = name + ".properties";
-        Path[] files = {rootDir.resolve(fileName), dir.resolve(fileName)};
+        return dir.resolve(fileName);
+    }
+
+    public static <O extends Record> OptFile<O> read(Path rootDir, Path dir, String name, Class<O> cls) throws IOException {
+        Path[] files = {path(rootDir, name), path(dir, name)};
         return read(cls, files);
     }
 

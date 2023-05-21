@@ -2,6 +2,7 @@ package jkara.pipe;
 
 import jkara.ass.AssSync;
 import jkara.opts.ODemucs;
+import jkara.opts.OptFile;
 import jkara.scroll.AssJoiner;
 import jkara.sync.FastText;
 import jkara.sync.SyncException;
@@ -18,6 +19,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class KaraPipe {
+
+    private static final String DEMUCS_OPTS = "demucs";
+    private static final String[] ALL_OPTS = {DEMUCS_OPTS};
 
     private final Path rootDir;
     private final ProcRunner runner;
@@ -102,7 +106,7 @@ public final class KaraPipe {
         String audioName = audio.input().getFileName().toString();
         String baseName = nameWithoutExtension(audioName);
         String demucsDir = "htdemucs/" + baseName;
-        StageValue<ODemucs> demucsOpts = stages.options("demucs", ODemucs.class);
+        StageValue<ODemucs> demucsOpts = stages.options(DEMUCS_OPTS, ODemucs.class);
         StageFile vocals = stages.file(demucsDir + "/vocals.wav", audio, demucsOpts);
         StageFile noVocals = stages.file(demucsDir + "/no_vocals.wav", audio, demucsOpts);
         if (isStage("Separating vocals and instrumental", vocals, noVocals)) {
@@ -210,6 +214,16 @@ public final class KaraPipe {
             return String.format("%s:%02d:%02d", hours, minutes, seconds);
         } else {
             return String.format("%s:%02d", minutes, seconds);
+        }
+    }
+
+    public void copyOptions(Path workDir) throws IOException {
+        for (String opt : ALL_OPTS) {
+            Path from = OptFile.path(rootDir, opt);
+            if (!Files.exists(from))
+                continue;
+            Path to = OptFile.path(workDir, opt);
+            Files.copy(from, to);
         }
     }
 }

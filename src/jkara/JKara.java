@@ -25,6 +25,12 @@ public final class JKara {
         }
 
         try {
+            KaraPipe pipe = new KaraPipe(null, cmd.rootDir);
+            if (cmd.audio == null) {
+                pipe.copyOptions(cmd.dir);
+                return;
+            }
+
             Path inputFile = cmd.dir.resolve("input.properties");
             OInput newInput = OInput.create(cmd.dir, cmd.url, cmd.audio, cmd.language, cmd.text);
             OInput prevInput = OptFile.read(OInput.class, inputFile).value;
@@ -38,7 +44,6 @@ public final class JKara {
                 }
             }
 
-            KaraPipe pipe = new KaraPipe(null, cmd.rootDir);
             if (cmd.url != null) {
                 pipe.downloadYoutube(cmd.url, cmd.audio, newProject);
             }
