@@ -9,12 +9,16 @@ import jkara.sync.SyncException;
 import jkara.sync.TextSync;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -63,21 +67,96 @@ public final class KaraPipe {
         return false;
     }
 
+    private static Map<String, String> queryParams(String url) {
+        Map<String, String> params = new HashMap<>();
+        int q = url.indexOf('?');
+        if (q < 0)
+            return params;
+        String[] pairs = url.substring(q + 1).split("&");
+        for (String pair : pairs) {
+            int idx = pair.indexOf('=');
+            if (idx <= 0)
+                continue;
+            String key = URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8);
+            String value = URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8);
+            params.put(key, value);
+        }
+        return params;
+    }
+
+    private static int parse(StringBuilder buf, String unit) {
+        int pos = buf.indexOf(unit);
+        if (pos > 0) {
+            int value = Integer.parseInt(buf.substring(0, pos));
+            buf.delete(0, pos + 1);
+            return value;
+        } else {
+            return 0;
+        }
+    }
+
+    private static long parseTime(String t) {
+        StringBuilder buf = new StringBuilder(t.trim());
+        long hours = parse(buf, "h");
+        long minutes = parse(buf, "m");
+        long seconds = parse(buf, "s");
+        if (!buf.isEmpty() && hours == 0 && minutes == 0 && seconds == 0) {
+            return Integer.parseInt(buf.toString());
+        }
+        return hours * 60 * 60 + minutes * 60 + seconds;
+    }
+
+    private static String range(String url) {
+        Map<String, String> params = queryParams(url);
+        String t = params.get("t");
+        String start = params.get("start");
+        String end = params.get("end");
+        Long secStart = null;
+        if (t != null) {
+            secStart = parseTime(t);
+        } else if (start != null) {
+            secStart = parseTime(start);
+        }
+        Long secEnd = null;
+        if (end != null) {
+            secEnd = parseTime(end);
+        }
+        if (secStart == null && secEnd == null)
+            return null;
+        StringBuilder buf = new StringBuilder();
+        if (secStart != null) {
+            buf.append(duration(secStart.longValue() * 1000L));
+        } else {
+            buf.append("0:00");
+        }
+        buf.append('-');
+        if (secEnd != null) {
+            buf.append(duration(secEnd.longValue() * 1000L));
+        } else {
+            buf.append("inf");
+        }
+        return buf.toString();
+    }
+
     public void downloadYoutube(String url, Path audio, boolean newProject) throws IOException, InterruptedException {
         if (!newProject && Files.exists(audio)) {
             log("Skipping downloading from Youtube as it is a repeated run");
             return;
         }
-        log("Downloading from Youtube...");
+        String range = range(url);
+        log(String.format("Downloading from Youtube%s...", range == null ? "" : " (range " + range + ")"));
         Files.createDirectories(audio.getParent());
-        runner.runExe(
-            "yt-dlp",
+        List<String> args = new ArrayList<>(List.of(
             "--write-info-json", "-k",
             "--extract-audio",
             "--audio-format", "mp3",
-            "--output", audio.toString(),
-            url
-        );
+            "--output", audio.toString()
+        ));
+        if (range != null) {
+            args.addAll(List.of("--download-sections", "*" + range));
+        }
+        args.add(url);
+        runner.runExe("yt-dlp", args);
         log(String.format("Audio downloaded to %s", audio));
     }
 
