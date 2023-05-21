@@ -126,15 +126,11 @@ public final class KaraPipe {
             );
         }
 
-        StageFile text;
-        if (userText != null) {
-            text = new StageFile(userText, false);
-        } else {
-            text = stages.file("text.txt");
-            if (isStage("Saving transcribed text (you can edit it)", text)) {
-                FastText.textFromFast(fastJson.input(), text.output());
-            }
+        StageFile text = new StageFile(textInput);
+        if (isStage("Saving transcribed text (you can edit it)", text)) {
+            FastText.textFromFast(fastJson.input(), text.output());
         }
+
         StageFile textJson = stages.file("text.json", text, fastJson);
         if (isStage("Synchronizing transcription with text", textJson)) {
             TextSync.sync(text.input(), fastJson.input(), () -> Files.newBufferedWriter(textJson.output()));
