@@ -231,8 +231,8 @@ public final class KaraPipe {
             "-map", "1:a:0", // audio from input 1
             "-shortest",
             "-c:v", "libx264", // todo: use copy for real video???
-            "-c:a", "aac", // todo: use same codec as source???
-            "-b:a", "192k", // todo: use same bitrate as source???
+            "-c:a", "aac",
+            "-b:a", "192k",
             karaoke.toString()
         ));
         runner.runFFMPEG(ffmpeg);

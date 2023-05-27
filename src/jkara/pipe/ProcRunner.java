@@ -80,7 +80,7 @@ final class ProcRunner {
         List<String> list = new ArrayList<>();
         String ffPath = ffmpegDir == null ? ff : ffmpegDir.resolve(ff).toString();
         list.add(ffPath);
-        list.addAll(List.of("-v", "quiet")); // todo: add -stats???
+        list.addAll(List.of("-v", "quiet"));
         list.addAll(args);
         runCommand(ff, list, out, exitOk);
     }
