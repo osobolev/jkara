@@ -60,4 +60,14 @@ tasks.register("distr", Copy::class) {
         include("scripts/**")
     }
     into("$rootDir/distr")
+    val copied = mutableListOf<FileCopyDetails>()
+    eachFile {
+        copied.add(this)
+    }
+    doLast {
+        copied.forEach {
+            val target = it.relativePath.getFile(destinationDir)
+            target.setLastModified(it.lastModified)
+        }
+    }
 }
