@@ -147,15 +147,9 @@ public final class AssJoiner {
                 };
                 String styleName = line.fields().getOrDefault("Style", "Default");
                 AssStyle style = parsed.styles.styles.get(styleName);
-                String primary;
-                String secondary;
-                if (style != null) {
-                    primary = style.values().get(AssStyleKey.PrimaryColour);
-                    secondary = style.values().get(AssStyleKey.SecondaryColour);
-                } else {
-                    primary = "&HFFFFFF";
-                    secondary = "&H0000FF";
-                }
+                Map<AssStyleKey, String> styleValues = style == null ? Collections.emptyMap() : style.values();
+                String primary = styleValues.getOrDefault(AssStyleKey.PrimaryColour, "&H0000FF");
+                String secondary = styleValues.getOrDefault(AssStyleKey.SecondaryColour, "&HFFFFFF");
                 Double nextStart;
                 if (i + 1 < group.size()) {
                     DialogLine next = group.get(i + 1);
