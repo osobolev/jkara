@@ -230,7 +230,7 @@ public final class KaraPipe {
             "-map", "0:v:0", // video from input 0
             "-map", "1:a:0", // audio from input 1
             "-shortest",
-            "-c:v", "libx264", // todo: use copy for real video???
+            "-c:v", "libx264",
             "-c:a", "aac",
             "-b:a", "192k",
             karaoke.toString()
