@@ -26,28 +26,48 @@ public final class JKara {
 
         try {
             KaraPipe pipe = new KaraPipe(null, cmd.rootDir);
-            if (cmd.audio == null) {
+            if (cmd.args instanceof CmdArgs.Options) {
                 pipe.copyOptions(cmd.dir);
                 return;
             }
-
             Path inputFile = cmd.dir.resolve("input.properties");
-            OInput newInput = OInput.create(cmd.dir, cmd.url, cmd.audio, cmd.language, cmd.text);
             OInput prevInput = OptFile.read(OInput.class, inputFile).value;
             boolean newProject = prevInput.audio() == null;
-            if (newProject) {
-                OptFile.write(inputFile, newInput);
-            } else {
-                List<String> diff = OInput.diff(prevInput, newInput);
-                if (!diff.isEmpty()) {
-                    throw new InitException(String.format("Input properties %s changed relative to saved in '%s'", diff, inputFile));
+            Path audio;
+            String language;
+            Path text;
+            if (cmd.args instanceof CmdArgs.Empty) {
+                if (newProject) {
+                    CmdArgs.help(null);
+                    System.exit(1);
+                    return;
+                } else {
+                    audio = cmd.dir.resolve(prevInput.audio());
+                    language = prevInput.language();
+                    text = cmd.dir.resolve(prevInput.text());
                 }
-            }
+            } else if (cmd.args instanceof CmdArgs.Input inp) {
+                OInput newInput = OInput.create(cmd.dir, inp.url(), inp.audio(), inp.language(), inp.text());
+                if (newProject) {
+                    OptFile.write(inputFile, newInput);
+                } else {
+                    List<String> diff = OInput.diff(prevInput, newInput);
+                    if (!diff.isEmpty()) {
+                        throw new InitException(String.format("Input properties %s changed relative to saved in '%s'", diff, inputFile));
+                    }
+                }
+                String url = inp.url();
+                audio = inp.audio();
+                language = inp.language();
+                text = inp.text();
 
-            if (cmd.url != null) {
-                pipe.downloadYoutube(cmd.url, cmd.audio, newProject);
+                if (url != null) {
+                    pipe.downloadYoutube(url, audio, newProject);
+                }
+            } else {
+                return;
             }
-            pipe.makeKaraoke(cmd.audio, cmd.language, cmd.text, cmd.dir);
+            pipe.makeKaraoke(audio, language, text, cmd.dir);
         } catch (SyncException ex) {
             System.err.println(ex.getMessage());
             System.err.printf("Please fix %s manually%n", ex.fastJson);

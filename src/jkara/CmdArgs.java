@@ -15,20 +15,22 @@ final class CmdArgs {
 
     private static final String DEFAULT_AUDIO = "audio.mp3";
 
+    sealed interface Args permits Empty, Options, Input {}
+
+    record Empty() implements Args {}
+
+    record Options() implements Args {}
+
+    record Input(String url, Path audio, String language, Path text) implements Args {}
+
     final Path rootDir;
     final Path dir;
-    final String url;
-    final Path audio;
-    final String language;
-    final Path text;
+    final Args args;
 
-    private CmdArgs(Path rootDir, Path dir, String url, Path audio, String language, Path text) {
+    private CmdArgs(Path rootDir, Path dir, Args args) {
         this.rootDir = rootDir;
         this.dir = dir;
-        this.url = url;
-        this.audio = audio;
-        this.language = language;
-        this.text = text;
+        this.args = args;
     }
 
     private static final class ArgException extends Exception {
@@ -39,7 +41,7 @@ final class CmdArgs {
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    private static void help(String error) {
+    static void help(String error) {
         System.out.println("Usage:");
         System.out.println("    jkara [-l <language>] [-d <dir>] [-f <file>] <URL> [<text>]");
         System.out.println("    jkara [-l <language>] [-d <dir>] [<audio>|<audio> <text>]");
@@ -104,54 +106,44 @@ final class CmdArgs {
                 i++;
             }
         }
-        if (positionalArgs.size() > 2) {
-            return error("Must have one (audio) or two (audio+text) positional arguments");
-        }
 
         Path rootDir = dir(rootDirArg);
         Path dir = dir(dirArg);
 
-        if (positionalArgs.size() == 1 && "options".equalsIgnoreCase(positionalArgs.get(0))) {
-            return new CmdArgs(rootDir, dir, null, null, null, null);
+        if (positionalArgs.isEmpty()) {
+            return new CmdArgs(rootDir, dir, new Empty());
         }
 
-        String urlOrFile;
-        if (positionalArgs.size() > 0) {
-            urlOrFile = positionalArgs.get(0);
-        } else {
-            urlOrFile = null;
+        if (positionalArgs.size() > 2) {
+            return error("Must have one (audio) or two (audio+text) positional arguments");
         }
-        Path audio;
+
+        if (positionalArgs.size() == 1 && "options".equalsIgnoreCase(positionalArgs.get(0))) {
+            return new CmdArgs(rootDir, dir, new Options());
+        }
+
+        String urlOrFile = positionalArgs.get(0);
+        boolean isURL;
+        try {
+            new URL(urlOrFile);
+            isURL = true;
+        } catch (MalformedURLException ex) {
+            isURL = false;
+        }
         String url;
-        if (urlOrFile != null) {
-            boolean isURL;
-            try {
-                new URL(urlOrFile);
-                isURL = true;
-            } catch (MalformedURLException ex) {
-                isURL = false;
-            }
-            if (isURL) {
-                url = urlOrFile;
-                if (fileArg == null) {
-                    audio = dir.resolve(DEFAULT_AUDIO);
-                } else {
-                    audio = Path.of(fileArg);
-                }
+        Path audio;
+        if (isURL) {
+            url = urlOrFile;
+            if (fileArg == null) {
+                audio = dir.resolve(DEFAULT_AUDIO);
             } else {
-                url = null;
-                audio = Path.of(urlOrFile);
-                if (!Files.exists(audio)) {
-                    return error(String.format("File '%s' does not exist", audio));
-                } else {
-                    checkMP3(audio);
-                }
+                audio = Path.of(fileArg);
             }
         } else {
             url = null;
-            audio = dir.resolve(DEFAULT_AUDIO);
+            audio = Path.of(urlOrFile);
             if (!Files.exists(audio)) {
-                return error(String.format("Default file '%s' does not exist, copy it or download from Youtube", audio));
+                return error(String.format("File '%s' does not exist", audio));
             } else {
                 checkMP3(audio);
             }
@@ -167,7 +159,7 @@ final class CmdArgs {
             text = dir.resolve("text.txt");
         }
 
-        return new CmdArgs(rootDir, dir, url, audio, language, text);
+        return new CmdArgs(rootDir, dir, new Input(url, audio, language, text));
     }
 
     static CmdArgs parse(String[] args) {
