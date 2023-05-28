@@ -41,10 +41,20 @@ public final class KaraPipe {
         return dot < 0 ? name : name.substring(0, dot);
     }
 
-    private static Path video(Path audio, String suffix) {
+    private static Path video(Path audio, String suffix, String ext) {
         String audioName = audio.getFileName().toString();
         String baseName = nameWithoutExtension(audioName);
-        return audio.resolveSibling(baseName + suffix + ".webm");
+        return audio.resolveSibling(baseName + suffix + ext);
+    }
+
+    private static Path video(Path audio, String suffix) {
+        String[] exts = {".webm", ".mp4"};
+        for (String ext : exts) {
+            Path video = video(audio, suffix, ext);
+            if (Files.exists(video))
+                return video;
+        }
+        return video(audio, suffix, exts[0]);
     }
 
     private static Path video(Path audio) {
