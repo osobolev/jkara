@@ -1,9 +1,10 @@
 package jkara.pipe;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,5 +92,17 @@ final class ProcRunner {
 
     void runFFProbe(List<String> args, Consumer<Process> out, IntPredicate exitOk) throws IOException, InterruptedException {
         runFF("ffprobe", args, out, exitOk);
+    }
+
+    JSONObject runFFProbe(List<String> args) throws IOException, InterruptedException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        runFF("ffprobe", args, p -> {
+            try {
+                p.getInputStream().transferTo(bos);
+            } catch (IOException ex) {
+                // ignore
+            }
+        }, null);
+        return new JSONObject(new JSONTokener(bos.toString(StandardCharsets.UTF_8)));
     }
 }

@@ -178,19 +178,11 @@ final class CutRange {
     CutRange getRealCut(ProcRunner runner, Path file) throws IOException, InterruptedException {
         double duration;
         {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            runner.runFFProbe(List.of(
+            JSONObject obj = runner.runFFProbe(List.of(
                 "-print_format", "json",
                 "-show_entries", "format=duration",
                 file.toString()
-            ), p -> {
-                try {
-                    p.getInputStream().transferTo(bos);
-                } catch (IOException ex) {
-                    // ignore
-                }
-            }, null);
-            JSONObject obj = new JSONObject(new JSONTokener(bos.toString(StandardCharsets.UTF_8)));
+            ));
             String durationStr = obj.getJSONObject("format").getString("duration");
             duration = Double.parseDouble(durationStr);
         }
