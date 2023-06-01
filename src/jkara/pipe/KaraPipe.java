@@ -7,6 +7,7 @@ import jkara.scroll.AssJoiner;
 import jkara.sync.FastText;
 import jkara.sync.SyncException;
 import jkara.sync.TextSync;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -217,10 +218,54 @@ public final class KaraPipe {
         return buf.toString();
     }
 
-    private void makeVideo(Path video, Path noVocals, Path scroll, Path karaoke) throws IOException, InterruptedException {
+    private static void addCodecs(List<String> args) {
+        args.addAll(List.of(
+            "-c:v", "libx264",
+            "-c:a", "aac",
+            "-b:a", "192k"
+        ));
+    }
+
+    private void enlargeVideo(Path video, Path largeVideo, int width, int height) throws IOException, InterruptedException {
+        String newSize = width + "x" + height;
+        log("Enlarging small video to " + newSize + "...");
+        List<String> ffmpeg = new ArrayList<>(List.of(
+            "-i", video.toString(),
+            "-y", "-stats",
+            "-s", newSize
+        ));
+        addCodecs(ffmpeg);
+        ffmpeg.add(largeVideo.toString());
+        runner.runFFMPEG(ffmpeg);
+    }
+
+    private void makeVideo(Path video, Path noVocals, Path scroll, Path karaoke, OKaraoke opts) throws IOException, InterruptedException {
         List<String> videoInput;
-        if (Files.exists(video)) {
-            videoInput = List.of("-i", video.toString());
+        if (opts.video() && Files.exists(video)) {
+            JSONObject obj = runner.runFFProbe(List.of(
+                "-print_format", "json",
+                "-select_streams", "v:0",
+                "-show_entries", "stream=width,height",
+                video.toString()
+            ));
+            JSONObject stream = obj.getJSONArray("streams").getJSONObject(0);
+            int width = stream.getInt("width");
+            int height = stream.getInt("height");
+            if (width < 1280) {
+                int scale = (int) Math.ceil(1280.0 / width);
+                int newWidth = scale * width;
+                int newHeight = scale * height;
+                Path largeVideo = video.resolveSibling(nameWithoutExtension(video.getFileName().toString()) + ".big.mp4");
+                enlargeVideo(video, largeVideo, newWidth, newHeight);
+                videoInput = List.of(
+                    "-i", largeVideo.toString()
+                );
+                log("Adding subtitles...");
+            } else {
+                videoInput = List.of(
+                    "-i", video.toString()
+                );
+            }
         } else {
             // Используем виртуальное видео длиной 1 час, оно обрезается с помощью опции -shortest до длины аудио:
             videoInput = List.of(
@@ -239,12 +284,10 @@ public final class KaraPipe {
             "-vf", "ass=" + escapeFilter(scroll.toString()),
             "-map", "0:v:0", // video from input 0
             "-map", "1:a:0", // audio from input 1
-            "-shortest",
-            "-c:v", "libx264",
-            "-c:a", "aac",
-            "-b:a", "192k",
-            karaoke.toString()
+            "-shortest"
         ));
+        addCodecs(ffmpeg);
+        ffmpeg.add(karaoke.toString());
         runner.runFFMPEG(ffmpeg);
     }
 
