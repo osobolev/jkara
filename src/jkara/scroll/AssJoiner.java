@@ -106,8 +106,17 @@ public final class AssJoiner {
         return Collections.nCopies(n, null);
     }
 
+    private static List<DialogLine> shiftLines(List<DialogLine> lines, double shift) {
+        if (shift == 0)
+            return lines;
+        return lines.stream().map(line -> new DialogLine(
+            line.fields(), Math.max(line.start() - shift, 0), line.end() - shift,
+            line.text(), line.rawText(), line.sumLen()
+        )).toList();
+    }
+
     public static List<DialogLine> join(ParsedAss parsed, List<String> titles, OKaraoke opts) {
-        List<List<DialogLine>> groups = splitByPauses(parsed.getLines(), opts.betweenGroups());
+        List<List<DialogLine>> groups = splitByPauses(shiftLines(parsed.getLines(), opts.shift()), opts.betweenGroups());
         List<DialogLine> newLines = new ArrayList<>();
         double prevEnd = 0;
         for (int gi = 0; gi < groups.size(); gi++) {

@@ -2,6 +2,7 @@ package jkara.opts;
 
 public record OKaraoke(
     double betweenGroups,
+    double shift,
 
     double preview1,
     double preview,
@@ -17,7 +18,7 @@ public record OKaraoke(
 
     public OKaraoke() {
         this(
-            2.5,
+            2.5, 0.15,
 
             2.0, 0.75, 0.75, 20.0,
 
