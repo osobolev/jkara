@@ -2,6 +2,7 @@ package jkara.pipe;
 
 import jkara.ass.AssSync;
 import jkara.opts.ODemucs;
+import jkara.opts.OKaraoke;
 import jkara.opts.OptFile;
 import jkara.scroll.AssJoiner;
 import jkara.sync.FastText;
@@ -22,7 +23,8 @@ import java.util.stream.Stream;
 public final class KaraPipe {
 
     private static final String DEMUCS_OPTS = "demucs";
-    private static final String[] ALL_OPTS = {DEMUCS_OPTS};
+    private static final String KARAOKE_OPTS = "karaoke";
+    private static final String[] ALL_OPTS = {DEMUCS_OPTS, KARAOKE_OPTS};
 
     private final Path rootDir;
     private final ProcRunner runner;
@@ -187,16 +189,17 @@ public final class KaraPipe {
             );
         }
 
+        StageValue<OKaraoke> karaokeOpts = stages.options(KARAOKE_OPTS, OKaraoke.class);
         StageFile infoJson = new StageFile(audio.input().resolveSibling(audioName + ".info.json"), true);
-        StageFile scroll = stages.file("karaoke.ass", ass, infoJson);
+        StageFile scroll = stages.file("karaoke.ass", ass, infoJson, karaokeOpts);
         if (isStage("Creating karaoke subtitles", scroll)) {
-            AssJoiner.join(ass.input(), infoJson.input(), scroll.output());
+            AssJoiner.join(ass.input(), infoJson.input(), scroll.output(), karaokeOpts.value());
         }
 
         StageFile video = new StageFile(video(audio.input()), true);
-        StageFile karaoke = stages.file("karaoke.mp4", noVocals, scroll, video);
+        StageFile karaoke = stages.file("karaoke.mp4", noVocals, scroll, video, karaokeOpts);
         if (isStage("Building karaoke video", karaoke)) {
-            makeVideo(video.input(), noVocals.input(), scroll.input(), karaoke.output());
+            makeVideo(video.input(), noVocals.input(), scroll.input(), karaoke.output(), karaokeOpts.value());
         }
 
         long t1 = System.currentTimeMillis();

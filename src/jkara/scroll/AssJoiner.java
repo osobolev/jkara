@@ -5,6 +5,7 @@ import ass.model.AssStyleKey;
 import ass.model.DialogLine;
 import ass.model.ParsedAss;
 import ass.parser.AssParser;
+import jkara.opts.OKaraoke;
 import jkara.util.Util;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -105,8 +106,8 @@ public final class AssJoiner {
         return Collections.nCopies(n, null);
     }
 
-    public static List<DialogLine> join(ParsedAss parsed, List<String> titles) {
-        List<List<DialogLine>> groups = splitByPauses(parsed.getLines(), 2.5); // todo: extract to parameter
+    public static List<DialogLine> join(ParsedAss parsed, List<String> titles, OKaraoke opts) {
+        List<List<DialogLine>> groups = splitByPauses(parsed.getLines(), opts.betweenGroups());
         List<DialogLine> newLines = new ArrayList<>();
         double prevEnd = 0;
         for (int gi = 0; gi < groups.size(); gi++) {
@@ -119,18 +120,22 @@ public final class AssJoiner {
                     double sincePrev = line.start() - prevEnd;
                     double addSilence;
                     if (gi == 0) {
-                        addSilence = 2.0; // todo: extract to parameter
+                        addSilence = opts.preview1();
                         starting = true;
                         if (!titles.isEmpty()) {
-                            double titlesTime = Math.min(line.start() - addSilence - 1.0, 5.0);
-                            if (titlesTime >= 1.0) {
+                            double titlesTime = Math.min(line.start() - addSilence - opts.minAfterTitles(), opts.maxTitles());
+                            if (titlesTime >= opts.minTitles()) {
                                 DialogLine titleLine = DialogLine.create(line.fields(), 0.0, titlesTime, String.join("\\N", titles));
                                 newLines.add(titleLine);
                             }
                         }
                     } else {
-                        addSilence = 0.75; // todo: extract to parameter
-                        starting = sincePrev > 20.0; // todo: extract to parameter
+                        starting = sincePrev >= opts.minSoloLength();
+                        if (starting) {
+                            addSilence = opts.previewAfterSolo();
+                        } else {
+                            addSilence = opts.preview();
+                        }
                     }
                     silenceBefore = Math.min(addSilence, sincePrev);
                 } else {
@@ -170,7 +175,7 @@ public final class AssJoiner {
         return newLines;
     }
 
-    public static void join(Path origAssPath, Path infoJson, Path newAssPath) throws IOException {
+    public static void join(Path origAssPath, Path infoJson, Path newAssPath, OKaraoke opts) throws IOException {
         List<String> titles = new ArrayList<>();
         if (Files.exists(infoJson)) {
             try (InputStream is = Files.newInputStream(infoJson)) {
@@ -192,7 +197,7 @@ public final class AssJoiner {
             }
         }
         ParsedAss origAss = AssParser.parse(origAssPath);
-        List<DialogLine> newLines = join(origAss, titles);
+        List<DialogLine> newLines = join(origAss, titles, opts);
         ParsedAss newAss = origAss.withLines(newLines);
         try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(newAssPath))) {
             newAss.write(pw);
