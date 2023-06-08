@@ -300,6 +300,8 @@ public final class KaraPipe {
             if (!Files.exists(from))
                 continue;
             Path to = OptFile.path(workDir, opt);
+            if (Files.exists(to))
+                continue;
             Files.copy(from, to);
         }
     }
