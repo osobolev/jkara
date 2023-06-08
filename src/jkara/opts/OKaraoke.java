@@ -18,7 +18,7 @@ public record OKaraoke(
 
     public OKaraoke() {
         this(
-            2.5, 0.15,
+            2.5, 0.1,
 
             2.0, 0.75, 0.75, 20.0,
 
