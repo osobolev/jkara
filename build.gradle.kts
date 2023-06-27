@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("com.github.ben-manes.versions") version "0.45.0"
 }
 
 group = "io.github.osobolev"
@@ -31,7 +32,7 @@ tasks.withType(JavaCompile::class) {
 
 dependencies {
     implementation("io.github.java-diff-utils:java-diff-utils:4.12")
-    implementation("org.json:json:20230227")
+    implementation("org.json:json:20230618")
 }
 
 tasks.jar {
