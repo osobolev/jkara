@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -39,29 +40,53 @@ public final class KaraPipe {
         System.out.printf(">>>>> [%s] %s%n", LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")), message);
     }
 
-    private static String nameWithoutExtension(String name) {
+    private interface NameParts {
+
+        String process(String baseName, String ext);
+    }
+
+    private static String splitName(Path file, NameParts parts) {
+        String name = file.getFileName().toString();
         int dot = name.lastIndexOf('.');
-        return dot < 0 ? name : name.substring(0, dot);
-    }
-
-    private static Path video(Path audio, String suffix, String ext) {
-        String audioName = audio.getFileName().toString();
-        String baseName = nameWithoutExtension(audioName);
-        return audio.resolveSibling(baseName + suffix + ext);
-    }
-
-    private static Path video(Path audio, String suffix) {
-        String[] exts = {".webm", ".mp4"};
-        for (String ext : exts) {
-            Path video = video(audio, suffix, ext);
-            if (Files.exists(video))
-                return video;
+        if (dot < 0) {
+            return parts.process(name, "");
+        } else {
+            return parts.process(name.substring(0, dot), name.substring(dot));
         }
-        return video(audio, suffix, exts[0]);
+    }
+
+    private static String nameWithoutExtension(Path file) {
+        return splitName(file, (baseName, ext) -> baseName);
+    }
+
+    private interface NameCandidates {
+
+        Stream<String> getNames(String audioName, String baseName);
+    }
+
+    private static Path oneOfSiblings(Path audio, NameCandidates getNames) {
+        String audioName = audio.getFileName().toString();
+        String baseName = nameWithoutExtension(audio);
+        Iterator<String> it = getNames.getNames(audioName, baseName).iterator();
+        Path first = null;
+        while (it.hasNext()) {
+            String name = it.next();
+            Path path = audio.resolveSibling(name);
+            if (Files.exists(path))
+                return path;
+            if (first == null) {
+                first = path;
+            }
+        }
+        return first;
     }
 
     private static Path video(Path audio) {
-        return video(audio, "");
+        return oneOfSiblings(audio, (audioName, baseName) -> Stream.of(".webm", ".mp4").map(ext -> baseName + ext));
+    }
+
+    private static Path info(Path audio) {
+        return oneOfSiblings(audio, (audioName, baseName) -> Stream.of(audioName, baseName).map(name -> name + ".info.json"));
     }
 
     public void downloadYoutube(String url, Path audio, boolean newProject) throws IOException, InterruptedException {
@@ -91,7 +116,8 @@ public final class KaraPipe {
             );
             log("Cutting downloaded video...");
             CutRange realCut = range.getRealCut(runner, video);
-            Path cutVideo = video(audio, ".tmp");
+            String tmpName = splitName(video, (baseName, ext) -> baseName + ".tmp" + ext);
+            Path cutVideo = video.resolveSibling(tmpName);
             realCut.doCut(runner, video, cutVideo);
             Files.delete(video);
             Files.move(cutVideo, video);
@@ -136,9 +162,7 @@ public final class KaraPipe {
 
         StageFile audio = new StageFile(audioInput);
 
-        String audioName = audio.input().getFileName().toString();
-        String baseName = nameWithoutExtension(audioName);
-        String demucsDir = "htdemucs/" + baseName;
+        String demucsDir = "htdemucs/" + nameWithoutExtension(audio.input());
         StageValue<ODemucs> demucsOpts = stages.options(DEMUCS_OPTS, ODemucs.class);
         StageFile vocals = stages.file(demucsDir + "/vocals.wav", audio, demucsOpts);
         StageFile noVocals = stages.file(demucsDir + "/no_vocals.wav", audio, demucsOpts);
@@ -190,7 +214,7 @@ public final class KaraPipe {
         }
 
         StageValue<OKaraoke> karaokeOpts = stages.options(KARAOKE_OPTS, OKaraoke.class);
-        StageFile infoJson = new StageFile(audio.input().resolveSibling(audioName + ".info.json"), true);
+        StageFile infoJson = new StageFile(info(audio.input()), true);
         StageFile scroll = stages.file("karaoke.ass", ass, infoJson, karaokeOpts);
         if (isStage("Creating karaoke subtitles", scroll)) {
             AssJoiner.join(ass.input(), infoJson.input(), scroll.output(), karaokeOpts.value());
@@ -258,7 +282,7 @@ public final class KaraPipe {
                 int scale = (int) Math.ceil(1280.0 / width);
                 int newWidth = scale * width;
                 int newHeight = scale * height;
-                Path largeVideo = video.resolveSibling(nameWithoutExtension(video.getFileName().toString()) + ".big.mp4");
+                Path largeVideo = video.resolveSibling(nameWithoutExtension(video) + ".big.mp4");
                 enlargeVideo(video, largeVideo, newWidth, newHeight);
                 videoInput = List.of(
                     "-i", largeVideo.toString()
