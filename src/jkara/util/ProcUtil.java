@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +16,11 @@ import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
 public final class ProcUtil {
+
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
+    public static void log(String message) {
+        System.out.printf(">>>>> [%s] %s%n", LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")), message);
+    }
 
     private static void capture(InputStream is, OutputStream os) {
         Thread thread = new Thread(() -> {

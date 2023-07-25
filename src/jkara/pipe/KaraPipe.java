@@ -14,13 +14,13 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static jkara.util.ProcUtil.log;
 
 public final class KaraPipe {
 
@@ -34,11 +34,6 @@ public final class KaraPipe {
     public KaraPipe(Path rootDir, Tools tools) {
         this.rootDir = rootDir;
         this.runner = new ProcRunner(tools, rootDir);
-    }
-
-    @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    private static void log(String message) {
-        System.out.printf(">>>>> [%s] %s%n", LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")), message);
     }
 
     private interface NameParts {

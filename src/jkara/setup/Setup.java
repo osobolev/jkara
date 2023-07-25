@@ -15,7 +15,9 @@ import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public final class Setup {
+import static jkara.util.ProcUtil.log;
+
+final class Setup {
 
     private static final String PYTHON_URL = "https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip";
     private static final String GET_PIP_URL = "https://bootstrap.pypa.io/get-pip.py";
@@ -70,6 +72,7 @@ public final class Setup {
     }
 
     private void installPython() throws IOException {
+        log("Downloading Python...");
         downloadZip(PYTHON_URL, name -> {
             if (name.endsWith("._pth")) {
                 return null;
@@ -80,6 +83,7 @@ public final class Setup {
     }
 
     private void installPIP() throws IOException, InterruptedException {
+        log("Installing PIP...");
         Path getPip = pythonDir.resolve("get-pip.py");
         download(GET_PIP_URL, is -> Files.copy(is, getPip, StandardCopyOption.REPLACE_EXISTING));
 
@@ -90,6 +94,7 @@ public final class Setup {
     }
 
     private void installPackages() throws IOException, InterruptedException {
+        log("Installing required packages...");
         Path pipExe = pythonDir.resolve(Path.of("Scripts", "pip"));
         runPython(
             "pip",
@@ -104,6 +109,7 @@ public final class Setup {
     }
 
     private void installFFMPEG() throws IOException {
+        log("Downloading FFMPEG...");
         downloadZip(FFMPEG_URL, name -> {
             Path sub = Path.of(name);
             int len = sub.getNameCount();
@@ -118,17 +124,18 @@ public final class Setup {
         void run() throws IOException, InterruptedException;
     }
 
-    private static void runStep(Path folder, Step step) throws IOException, InterruptedException {
+    private static void runStep(String what, Path folder, Step step) throws IOException, InterruptedException {
         Path done = folder.resolve(".done");
         if (Files.exists(done))
             return;
+        log("Installing " + what);
         step.run();
         Files.write(done, new byte[0]);
     }
 
     Tools setup() throws IOException, InterruptedException {
-        runStep(pythonDir, this::setupPython);
-        runStep(ffmpegDir, this::installFFMPEG);
+        runStep("Python", pythonDir, this::setupPython);
+        runStep("FFMPEG", ffmpegDir, this::installFFMPEG);
         return new Tools(pythonDir, ffmpegDir.resolve("bin"));
     }
 }
