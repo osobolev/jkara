@@ -5,6 +5,7 @@ import jkara.opts.ODemucs;
 import jkara.opts.OKaraoke;
 import jkara.opts.OptFile;
 import jkara.scroll.AssJoiner;
+import jkara.setup.Tools;
 import jkara.sync.FastText;
 import jkara.sync.SyncException;
 import jkara.sync.TextSync;
@@ -30,9 +31,9 @@ public final class KaraPipe {
     private final Path rootDir;
     private final ProcRunner runner;
 
-    public KaraPipe(Path ffmpeg, Path rootDir) {
+    public KaraPipe(Path rootDir, Tools tools) {
         this.rootDir = rootDir;
-        this.runner = new ProcRunner(ffmpeg, rootDir);
+        this.runner = new ProcRunner(tools, rootDir);
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
@@ -98,7 +99,7 @@ public final class KaraPipe {
         log(String.format("Downloading from Youtube%s...", range == null ? "" : " (range " + range + ")"));
         Files.createDirectories(audio.getParent());
         if (range == null) {
-            runner.runExe(
+            runner.runPythonExe(
                 "yt-dlp",
                 "--write-info-json", "-k",
                 "--extract-audio",
@@ -108,7 +109,7 @@ public final class KaraPipe {
             );
         } else {
             Path video = video(audio);
-            runner.runExe(
+            runner.runPythonExe(
                 "yt-dlp",
                 "--write-info-json",
                 "--output", video.toString(),
@@ -167,7 +168,7 @@ public final class KaraPipe {
         StageFile vocals = stages.file(demucsDir + "/vocals.wav", audio, demucsOpts);
         StageFile noVocals = stages.file(demucsDir + "/no_vocals.wav", audio, demucsOpts);
         if (isStage("Separating vocals and instrumental", vocals, noVocals)) {
-            runner.runExe(
+            runner.runPythonExe(
                 "demucs",
                 "--two-stems=vocals",
                 "--shifts=" + demucsOpts.value().shifts(),
@@ -181,7 +182,7 @@ public final class KaraPipe {
         StageFile fastJson = stages.file("fast.json", vocals);
         if (isStage("Transcribing vocals", fastJson)) {
             String language = maybeLanguage == null ? "-" : maybeLanguage;
-            runner.runPython(
+            runner.runPythonScript(
                 "scripts/transcribe.py",
                 vocals.input().toString(), fastJson.output().toString(), language
             );
@@ -199,7 +200,7 @@ public final class KaraPipe {
 
         StageFile alignedJson = stages.file("aligned.json", vocals, textJson);
         if (isStage("Performing alignment", alignedJson)) {
-            runner.runPython(
+            runner.runPythonScript(
                 "scripts/align.py",
                 vocals.input().toString(), textJson.input().toString(), alignedJson.output().toString()
             );

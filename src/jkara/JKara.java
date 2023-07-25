@@ -2,6 +2,7 @@ package jkara;
 
 import jkara.opts.OptFile;
 import jkara.pipe.KaraPipe;
+import jkara.setup.Tools;
 import jkara.sync.SyncException;
 
 import java.nio.file.Path;
@@ -25,7 +26,8 @@ public final class JKara {
         }
 
         try {
-            KaraPipe pipe = new KaraPipe(null, cmd.rootDir);
+            Tools tools = Tools.setup();
+            KaraPipe pipe = new KaraPipe(cmd.rootDir, tools);
             if (cmd.args instanceof CmdArgs.Options) {
                 pipe.copyOptions(cmd.dir);
                 return;

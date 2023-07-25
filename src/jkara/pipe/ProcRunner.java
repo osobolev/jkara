@@ -1,89 +1,61 @@
 package jkara.pipe;
 
+import jkara.setup.Tools;
+import jkara.util.ProcUtil;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.IntPredicate;
 
 final class ProcRunner {
 
-    private final Path ffmpegDir;
+    private final Tools tools;
     private final Path rootDir;
 
-    ProcRunner(Path ffmpegDir, Path rootDir) {
-        this.ffmpegDir = ffmpegDir;
+    ProcRunner(Tools tools, Path rootDir) {
+        this.tools = tools;
         this.rootDir = rootDir;
     }
 
-    private static void capture(InputStream is, OutputStream os) {
-        Thread thread = new Thread(() -> {
-            try {
-                is.transferTo(os);
-            } catch (IOException ex) {
-                // ignore
-            }
-        });
-        thread.start();
+    private static Path exe(Path dir, String name) {
+        return dir == null ? Path.of(name) : dir.resolve(name);
     }
 
-    @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    private void runCommand(String what, List<String> args, Consumer<Process> out, IntPredicate exitOk) throws IOException, InterruptedException {
-        ProcessBuilder pb = new ProcessBuilder(args);
-        if (ffmpegDir != null) {
-            String path = pb.environment().get("PATH");
-            pb.environment().put("PATH", path == null ? ffmpegDir.toString() : ffmpegDir + File.pathSeparator + path);
-        }
-        Process p = pb.start();
-        capture(p.getErrorStream(), System.err);
-        if (out != null) {
-            out.accept(p);
+    private void runCommand(String what, Path exe, List<String> args, Consumer<Process> out, IntPredicate exitOk) throws IOException, InterruptedException {
+        List<Path> pathDirs;
+        if (tools.ffmpegDir != null) {
+            pathDirs = Collections.singletonList(tools.ffmpegDir);
         } else {
-            capture(p.getInputStream(), System.out);
+            pathDirs = Collections.emptyList();
         }
-        int exitCode = p.waitFor();
-        boolean ok;
-        if (exitOk != null) {
-            ok = exitOk.test(exitCode);
-        } else {
-            ok = exitCode == 0;
-        }
-        if (!ok)
-            throw new IOException("Error running " + what + ": " + exitCode);
+        ProcUtil.runCommand(what, exe, args, pathDirs, out, exitOk);
     }
 
-    void runPython(String script, String... args) throws IOException, InterruptedException {
+    void runPythonScript(String script, String... args) throws IOException, InterruptedException {
         List<String> list = new ArrayList<>();
-        list.add("python");
         list.add(rootDir.resolve(script).toString());
         list.addAll(Arrays.asList(args));
-        runCommand("script " + script, list, null, null);
+        runCommand("script " + script, exe(tools.pythonDir, "python"), list, null, null);
     }
 
-    void runExe(String exe, List<String> args) throws IOException, InterruptedException {
-        List<String> list = new ArrayList<>();
-        list.add(exe);
-        list.addAll(args);
-        runCommand(exe, list, null, null);
-    }
-
-    void runExe(String exe, String... args) throws IOException, InterruptedException {
-        runExe(exe, Arrays.asList(args));
+    void runPythonExe(String exe, String... args) throws IOException, InterruptedException {
+        runCommand(exe, exe(tools.pythonExeDir, exe), List.of(args), null, null);
     }
 
     private void runFF(String ff, List<String> args, Consumer<Process> out, IntPredicate exitOk) throws IOException, InterruptedException {
         List<String> list = new ArrayList<>();
-        String ffPath = ffmpegDir == null ? ff : ffmpegDir.resolve(ff).toString();
-        list.add(ffPath);
         list.addAll(List.of("-v", "quiet"));
         list.addAll(args);
-        runCommand(ff, list, out, exitOk);
+        runCommand(ff, exe(tools.ffmpegDir, ff), list, out, exitOk);
     }
 
     void runFFMPEG(List<String> args) throws IOException, InterruptedException {
