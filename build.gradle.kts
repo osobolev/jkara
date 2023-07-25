@@ -18,10 +18,10 @@ java {
 
 sourceSets {
     main {
-        java.srcDir("src")
+        java.setSrcDirs(listOf("src"))
     }
     test {
-        java.srcDir("test")
+        java.setSrcDirs(listOf("test"))
     }
 }
 
