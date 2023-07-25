@@ -1,5 +1,5 @@
 plugins {
-    id("java")
+    id("application")
     id("com.github.ben-manes.versions") version "0.45.0"
 }
 
@@ -35,13 +35,9 @@ dependencies {
     implementation("org.json:json:20230618")
 }
 
-tasks.jar {
-    manifest {
-        attributes(
-            "Class-Path" to configurations.runtimeClasspath.map { conf -> conf.files.map { f -> f.name }.sorted().joinToString(" ") },
-            "Main-Class" to "jkara.JKara"
-        )
-    }
+application {
+    mainClass.set("jkara.JKara")
+    mainModule.set("jkara")
 }
 
 tasks.named("clean").configure {
