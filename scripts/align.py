@@ -18,16 +18,16 @@ def align(audio, text_json, aligned_json):
     language = data["language"]
     model = "jonatasgrosman/wav2vec2-large-xlsr-53-russian" if language == "ru" else "WAV2VEC2_ASR_LARGE_LV60K_960H"
     align_model, align_metadata = whisperx.load_align_model(language, device, model_name=model)
-    aligned = whisperx.align(data["segments"], align_model, align_metadata, audio, device, extend_duration=2.0)
+    aligned = whisperx.align(data["segments"], align_model, align_metadata, audio, device, return_char_alignments=True)
     
     for segment in aligned["segments"]:
         char_segments = []
-        for cidx, crow in segment["char-segments"].iterrows():
-            char_segments.append(crow.to_dict())
+        for crow in segment["chars"]:
+            char_segments.append(crow)
         segment["char-segments"] = char_segments
         word_segments = []
-        for cidx, crow in segment["word-segments"].iterrows():
-            word_segments.append(crow.to_dict())
+        for crow in segment["words"]:
+            word_segments.append(crow)
         segment["word-segments"] = word_segments
 
     with open(aligned_json, "w", encoding="utf-8") as js_file:
