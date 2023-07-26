@@ -2,15 +2,20 @@ package jkara.setup;
 
 import jkara.util.ProcUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -71,15 +76,47 @@ final class Setup {
         ProcUtil.runCommand(what, exe, List.of(args), pathDirs, null, null);
     }
 
+    private List<Path> getPathFiles() throws IOException {
+        List<Path> pathFiles = new ArrayList<>();
+        try (DirectoryStream<Path> files = Files.newDirectoryStream(pythonDir)) {
+            for (Path file : files) {
+                if (file.getFileName().toString().endsWith("._pth")) {
+                    pathFiles.add(file);
+                }
+            }
+        }
+        return pathFiles;
+    }
+
+    private static void patchPathFile(Path file) throws IOException {
+        List<String> toAdd = List.of("Lib" + File.separator + "site-packages");
+        List<String> lines = Files.readAllLines(file);
+        Set<String> missing = new HashSet<>(toAdd);
+        List<String> real = new ArrayList<>();
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty() || trimmed.startsWith("#"))
+                continue;
+            missing.remove(line);
+            real.add(line);
+        }
+        if (missing.isEmpty())
+            return;
+        for (String line : toAdd) {
+            if (missing.contains(line)) {
+                real.add(line);
+            }
+        }
+        Files.write(file, real);
+    }
+
     private void installPython() throws IOException {
         log("Downloading Python...");
-        downloadZip(PYTHON_URL, name -> {
-            if (name.endsWith("._pth")) {
-                return null;
-            } else {
-                return pythonDir.resolve(name);
-            }
-        });
+        downloadZip(PYTHON_URL, pythonDir::resolve);
+
+        for (Path file : getPathFiles()) {
+            patchPathFile(file);
+        }
     }
 
     private void installPIP() throws IOException, InterruptedException {
@@ -98,7 +135,15 @@ final class Setup {
         Path pipExe = pythonDir.resolve(Path.of("Scripts", "pip"));
         runPython(
             "pip",
-            pipExe, "-v", "install", "yt-dlp", "PySoundFile", "demucs", "faster_whisper", WHISPERX_URL
+            pipExe, "-v", "install", "yt-dlp", "PySoundFile", "demucs", "faster_whisper"
+        );
+        // Неизвестно почему с файлом ._pth не устанавливается - удаляем:
+        for (Path path : getPathFiles()) {
+            Files.delete(path);
+        }
+        runPython(
+            "pip",
+            pipExe, "-v", "install", WHISPERX_URL
         );
     }
 
