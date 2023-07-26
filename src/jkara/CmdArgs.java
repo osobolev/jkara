@@ -107,7 +107,7 @@ final class CmdArgs {
             }
         }
 
-        Path rootDir = dir(rootDirArg);
+        Path rootDir = dir(rootDirArg).normalize();
         Path dir = dir(dirArg);
 
         if (positionalArgs.isEmpty()) {
