@@ -15,8 +15,9 @@ public final class Tools {
         this.ffmpegDir = ffmpegDir;
     }
 
-    public static Tools setup() throws IOException, InterruptedException {
+    public static Tools setup(Path rootDir) throws IOException, InterruptedException {
+        SoftSources sources = SoftSources.create(rootDir);
         Path toolDir = Path.of(System.getProperty("user.home")).resolve(".jkara");
-        return new Setup(toolDir).setup();
+        return new Setup(sources, toolDir).setup();
     }
 }

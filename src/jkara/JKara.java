@@ -26,7 +26,7 @@ public final class JKara {
         }
 
         try {
-            Tools tools = Tools.setup();
+            Tools tools = Tools.setup(cmd.rootDir);
             KaraPipe pipe = new KaraPipe(cmd.rootDir, tools);
             if (cmd.args instanceof CmdArgs.Options) {
                 pipe.copyOptions(cmd.dir);

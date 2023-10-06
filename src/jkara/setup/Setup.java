@@ -24,15 +24,12 @@ import static jkara.util.ProcUtil.log;
 
 final class Setup {
 
-    private static final String PYTHON_URL = "https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip";
-    private static final String GET_PIP_URL = "https://bootstrap.pypa.io/get-pip.py";
-    private static final String WHISPERX_URL = "https://github.com/osobolev/whisperX/archive/refs/heads/main.zip";
-    private static final String FFMPEG_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
-
+    private final SoftSources sources;
     private final Path pythonDir;
     private final Path ffmpegDir;
 
-    Setup(Path toolDir) {
+    Setup(SoftSources sources, Path toolDir) {
+        this.sources = sources;
         this.pythonDir = toolDir.resolve("python");
         this.ffmpegDir = toolDir.resolve("ffmpeg");
     }
@@ -112,7 +109,7 @@ final class Setup {
 
     private void installPython() throws IOException {
         log("Downloading Python...");
-        downloadZip(PYTHON_URL, pythonDir::resolve);
+        downloadZip(sources.pythonUrl(), pythonDir::resolve);
 
         for (Path file : getPathFiles()) {
             patchPathFile(file);
@@ -122,7 +119,7 @@ final class Setup {
     private void installPIP() throws IOException, InterruptedException {
         log("Installing PIP...");
         Path getPip = pythonDir.resolve("get-pip.py");
-        download(GET_PIP_URL, is -> Files.copy(is, getPip, StandardCopyOption.REPLACE_EXISTING));
+        download(sources.getPipUrl(), is -> Files.copy(is, getPip, StandardCopyOption.REPLACE_EXISTING));
 
         runPython(
             "get-pip",
@@ -143,7 +140,7 @@ final class Setup {
         }
         runPython(
             "pip",
-            pipExe, "-v", "install", WHISPERX_URL
+            pipExe, "-v", "install", sources.whisperxUrl()
         );
     }
 
@@ -155,7 +152,7 @@ final class Setup {
 
     private void installFFMPEG() throws IOException {
         log("Downloading FFMPEG...");
-        downloadZip(FFMPEG_URL, name -> {
+        downloadZip(sources.ffmpegUrl(), name -> {
             Path sub = Path.of(name);
             int len = sub.getNameCount();
             if (len <= 1)
