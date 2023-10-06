@@ -1,7 +1,7 @@
 package jkara.opts;
 
 public record OAlign(
-    boolean interpolate
+    boolean words
 ) {
 
     public OAlign() {

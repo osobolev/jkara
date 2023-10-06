@@ -1,7 +1,7 @@
 package jkara.pipe;
 
 import jkara.ass.AssSync;
-import jkara.ass.InterpolatedAss;
+import jkara.ass.WordAss;
 import jkara.opts.OAlign;
 import jkara.opts.ODemucs;
 import jkara.opts.OKaraoke;
@@ -191,11 +191,11 @@ public final class KaraPipe {
 
         StageValue<OAlign> alignOpts = stages.options(ALIGN_OPTS, OAlign.class);
         StageFile ass;
-        if (alignOpts.value().interpolate()) {
+        if (alignOpts.value().words()) {
             ass = stages.file("subs.ass", text, fastJson);
-            if (isStage("Interpolating text", ass)) {
-                List<InterpolatedLine> lines = InterpolateTextSync.sync(text.input(), fastJson.input());
-                InterpolatedAss.writeAss(
+            if (isStage("Synchronizing words with text", ass)) {
+                List<WordLine> lines = WordTextSync.sync(text.input(), fastJson.input());
+                WordAss.writeAss(
                     lines,
                     () -> Files.newBufferedWriter(ass.output())
                 );

@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
-public final class InterpolateTextSync {
+public final class WordTextSync {
 
     private static boolean isWord(char ch) {
         return Character.isLetterOrDigit(ch);
@@ -64,7 +64,7 @@ public final class InterpolateTextSync {
     private record SrcSegment(int segment, int origFrom, int origTo)
     {}
 
-    public static List<InterpolatedLine> sync(Path text, Path fastJson) throws IOException, SyncException {
+    public static List<WordLine> sync(Path text, Path fastJson) throws IOException, SyncException {
         String realText = Util.readLyrics(text);
         Map<Integer, CWS> origMap = new HashMap<>();
         List<CWS> real = new ArrayList<>();
@@ -141,7 +141,7 @@ public final class InterpolateTextSync {
             double start = line.get(0).start();
             double end = line.get(line.size() - 1).end();
             List<TimedWord> twords = line.stream().map(w -> new TimedWord(w.end() - w.start(), w.word() + w.extra())).toList();
-            return new InterpolatedLine(start, end, twords);
+            return new WordLine(start, end, twords);
         }).toList();
     }
 }

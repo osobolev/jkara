@@ -1,6 +1,6 @@
 package jkara.ass;
 
-import jkara.sync.InterpolatedLine;
+import jkara.sync.WordLine;
 import jkara.sync.TimedWord;
 import jkara.util.OutputFactory;
 import jkara.util.Util;
@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class InterpolatedAss {
+public final class WordAss {
 
-    public static void writeAss(List<InterpolatedLine> lines, OutputFactory factory) throws IOException {
+    public static void writeAss(List<WordLine> lines, OutputFactory factory) throws IOException {
         List<String> assLines = new ArrayList<>();
-        for (InterpolatedLine line : lines) {
+        for (WordLine line : lines) {
             StringBuilder buf = new StringBuilder();
             for (TimedWord word : line.words()) {
                 Util.appendK(buf, "K", word.time());
