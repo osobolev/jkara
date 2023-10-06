@@ -5,14 +5,14 @@ import jkara.opts.OptFile;
 import java.io.IOException;
 import java.nio.file.Path;
 
-record SoftSources(
+public record SoftSources(
     String pythonUrl,
     String getPipUrl,
     String whisperxUrl,
     String ffmpegUrl
 ) {
 
-    SoftSources() {
+    public SoftSources() {
         this(
             "https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip",
             "https://bootstrap.pypa.io/get-pip.py",
