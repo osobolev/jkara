@@ -130,6 +130,7 @@ final class Setup {
     private void installPackages() throws IOException, InterruptedException {
         log("Installing required packages...");
         Path pipExe = pythonDir.resolve(Path.of("Scripts", "pip"));
+        // todo: устанавливать numpy нужной версии (numpy-1.24.4 instead of 1.25.1)???
         runPython(
             "pip",
             pipExe, "-v", "install", "yt-dlp", "PySoundFile", "demucs", "faster_whisper"
@@ -176,6 +177,7 @@ final class Setup {
     }
 
     Tools setup() throws IOException, InterruptedException {
+        // todo: possibility to use tools from PATH if properties file contains some setting
         runStep("Python", pythonDir, this::setupPython);
         runStep("FFMPEG", ffmpegDir, this::installFFMPEG);
         return new Tools(pythonDir, ffmpegDir.resolve("bin"));
