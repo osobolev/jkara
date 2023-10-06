@@ -124,12 +124,17 @@ public final class TextSync {
         return buf.toString();
     }
 
+    static void sync(Path text, List<CWS> real, Path fastJson, FastResult fast) throws IOException, SyncException {
+        ErrorContext errorContext = new ErrorContext(text, fastJson, real, fast);
+        new TextSync(errorContext).align(real, fast.list);
+    }
+
     public static void sync(Path text, Path fastJson, OutputFactory textJson) throws IOException, SyncException {
         RealText real = RealText.read(text);
         FastResult fast = FastResult.read(fastJson);
 
-        ErrorContext errorContext = new ErrorContext(text, fastJson, real, fast);
-        new TextSync(errorContext).align(real.list, fast.list);
+        sync(text, real.list, fastJson, fast);
+
         List<Segment> segments = getResult(real, fast);
         JSONArray array = new JSONArray();
         for (Segment segment : segments) {

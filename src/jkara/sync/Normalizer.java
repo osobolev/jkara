@@ -3,23 +3,31 @@ package jkara.sync;
 import jkara.util.Util;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.function.BiConsumer;
 
 final class Normalizer {
 
-    static void append(List<CWS> buf, String str, Integer segment) {
+    static void append(List<CWS> buf, String str, Integer segment, BiConsumer<Integer, CWS> origMap) {
         for (int j = 0; j < str.length(); j++) {
             char ch = str.charAt(j);
             if (Util.isLetter(ch)) {
                 char lch = Character.toLowerCase(ch);
-                buf.add(new CWS(lch, segment));
+                CWS cws = new CWS(lch, segment);
+                origMap.accept(j, cws);
+                buf.add(cws);
             } else if (!buf.isEmpty()) {
                 CWS last = buf.get(buf.size() - 1);
                 if (last.ch != ' ') {
-                    buf.add(new CWS(' ', segment));
+                    CWS cws = new CWS(' ', segment);
+                    origMap.accept(j, cws);
+                    buf.add(cws);
                 }
             }
         }
+    }
+
+    static void append(List<CWS> buf, String str, Integer segment) {
+        append(buf, str, segment, (index, cws) -> {});
     }
 
     static void finish(List<CWS> buf) {
@@ -30,9 +38,5 @@ final class Normalizer {
         if (last.ch == ' ') {
             buf.remove(lastIndex);
         }
-    }
-
-    static String plain(List<CWS> list) {
-        return list.stream().map(e -> String.valueOf(e.ch)).collect(Collectors.joining());
     }
 }

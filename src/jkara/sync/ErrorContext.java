@@ -8,10 +8,10 @@ final class ErrorContext {
 
     private final Path text;
     private final Path fastJson;
-    private final RealText realText;
+    private final List<CWS> realText;
     private final FastResult fastResult;
 
-    ErrorContext(Path text, Path fastJson, RealText realText, FastResult fastResult) {
+    ErrorContext(Path text, Path fastJson, List<CWS> realText, FastResult fastResult) {
         this.text = text;
         this.fastJson = fastJson;
         this.realText = realText;
@@ -76,7 +76,7 @@ final class ErrorContext {
     }
 
     void realError(int realPosition) throws SyncException {
-        String ctx = getFallbackErrorContext(realText.list, realPosition);
+        String ctx = getFallbackErrorContext(realText, realPosition);
         syncError(text, ctx);
     }
 }

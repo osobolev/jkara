@@ -1,14 +1,14 @@
 package jkara.pipe;
 
 import jkara.ass.AssSync;
+import jkara.ass.InterpolatedAss;
+import jkara.opts.OAlign;
 import jkara.opts.ODemucs;
 import jkara.opts.OKaraoke;
 import jkara.opts.OptFile;
 import jkara.scroll.AssJoiner;
 import jkara.setup.Tools;
-import jkara.sync.FastText;
-import jkara.sync.SyncException;
-import jkara.sync.TextSync;
+import jkara.sync.*;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -26,7 +26,8 @@ public final class KaraPipe {
 
     private static final String DEMUCS_OPTS = "demucs";
     private static final String KARAOKE_OPTS = "karaoke";
-    private static final String[] ALL_OPTS = {DEMUCS_OPTS, KARAOKE_OPTS};
+    private static final String ALIGN_OPTS = "align";
+    private static final String[] ALL_OPTS = {DEMUCS_OPTS, KARAOKE_OPTS, ALIGN_OPTS};
 
     private final Path rootDir;
     private final ProcRunner runner;
@@ -188,25 +189,38 @@ public final class KaraPipe {
             FastText.textFromFast(fastJson.input(), text.output());
         }
 
-        StageFile textJson = stages.file("text.json", text, fastJson);
-        if (isStage("Synchronizing transcription with text", textJson)) {
-            TextSync.sync(text.input(), fastJson.input(), () -> Files.newBufferedWriter(textJson.output()));
-        }
+        StageValue<OAlign> alignOpts = stages.options(ALIGN_OPTS, OAlign.class);
+        StageFile ass;
+        if (alignOpts.value().interpolate()) {
+            ass = stages.file("subs.ass", text, fastJson);
+            if (isStage("Interpolating text", ass)) {
+                List<InterpolatedLine> lines = InterpolateTextSync.sync(text.input(), fastJson.input());
+                InterpolatedAss.writeAss(
+                    lines,
+                    () -> Files.newBufferedWriter(ass.output())
+                );
+            }
+        } else {
+            StageFile textJson = stages.file("text.json", text, fastJson);
+            if (isStage("Synchronizing transcription with text", textJson)) {
+                TextSync.sync(text.input(), fastJson.input(), () -> Files.newBufferedWriter(textJson.output()));
+            }
 
-        StageFile alignedJson = stages.file("aligned.json", vocals, textJson);
-        if (isStage("Performing alignment", alignedJson)) {
-            runner.runPythonScript(
-                "scripts/align.py",
-                vocals.input().toString(), textJson.input().toString(), alignedJson.output().toString()
-            );
-        }
+            StageFile alignedJson = stages.file("aligned.json", vocals, textJson);
+            if (isStage("Performing alignment", alignedJson)) {
+                runner.runPythonScript(
+                    "scripts/align.py",
+                    vocals.input().toString(), textJson.input().toString(), alignedJson.output().toString()
+                );
+            }
 
-        StageFile ass = stages.file("subs.ass", alignedJson, text);
-        if (isStage("Creating subtitles", ass)) {
-            AssSync.sync(
-                text.input(), textJson.input(), alignedJson.input(),
-                () -> Files.newBufferedWriter(ass.output())
-            );
+            ass = stages.file("subs.ass", alignedJson, text);
+            if (isStage("Creating subtitles", ass)) {
+                AssSync.sync(
+                    text.input(), textJson.input(), alignedJson.input(),
+                    () -> Files.newBufferedWriter(ass.output())
+                );
+            }
         }
 
         StageValue<OKaraoke> karaokeOpts = stages.options(KARAOKE_OPTS, OKaraoke.class);

@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 final class AssWriter {
 
@@ -92,22 +94,25 @@ final class AssWriter {
                 i++;
             }
         }
+        return assLine(minStart, maxEnd, buf.toString());
+    }
+
+    static String assLine(double start, double end, String text) {
         return String.format(
             "Dialogue: 0,%s,%s,Default,,0,0,0,,%s",
-            DialogLine.formatTimestamp(minStart), DialogLine.formatTimestamp(maxEnd), buf
+            DialogLine.formatTimestamp(start), DialogLine.formatTimestamp(end), text
         );
     }
 
     static void write(RawText text, OutputFactory factory) throws IOException {
         List<List<CSegment>> lines = splitToLines(text);
+        write(factory, lines.stream().map(AssWriter::assLine));
+    }
+
+    static void write(OutputFactory factory, Stream<String> lines) throws IOException {
         try (PrintWriter pw = new PrintWriter(factory.open())) {
             HEADER.lines().forEach(pw::println);
-            for (List<CSegment> line : lines) {
-                String assLine = assLine(line);
-                if (assLine == null)
-                    continue;
-                pw.println(assLine);
-            }
+            lines.filter(Objects::nonNull).forEach(pw::println);
         }
     }
 }
