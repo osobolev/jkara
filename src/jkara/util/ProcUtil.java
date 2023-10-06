@@ -18,7 +18,22 @@ import java.util.stream.Collectors;
 public final class ProcUtil {
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    public static void log(String message) {
+    public static void log(String format, Object... args) {
+        Object[] normalized;
+        if (args.length > 0) {
+            normalized = new Object[args.length];
+            for (int i = 0; i < args.length; i++) {
+                Object arg = args[i];
+                if (arg instanceof Path path) {
+                    normalized[i] = path.normalize();
+                } else {
+                    normalized[i] = arg;
+                }
+            }
+        } else {
+            normalized = args;
+        }
+        String message = format.formatted(normalized);
         System.out.printf(">>>>> [%s] %s%n", LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")), message);
     }
 

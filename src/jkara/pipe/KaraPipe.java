@@ -127,7 +127,7 @@ public final class KaraPipe {
                 audio.toString()
             ));
         }
-        log(String.format("Audio downloaded to %s", audio));
+        log("Audio downloaded to %s", audio);
     }
 
     private static boolean isStage(String log, StageFile... files) {
@@ -135,7 +135,7 @@ public final class KaraPipe {
             String cause = file.isModified();
             if (cause != null) {
                 String output = Stream.of(files).map(f -> f.input().getFileName().toString()).collect(Collectors.joining(", "));
-                log(String.format("%s (building '%s' because %s)...", log, output, cause));
+                log("%s (building '%s' because %s)...", log, output, cause);
                 return true;
             }
         }
@@ -237,7 +237,7 @@ public final class KaraPipe {
         }
 
         long t1 = System.currentTimeMillis();
-        log(String.format("Done in %s, result written to %s", CutRange.duration(t1 - t0), karaoke.input()));
+        log("Done in %s, result written to %s", CutRange.duration(t1 - t0), karaoke.input());
     }
 
     private static String escapeFilter(String path) {
@@ -265,7 +265,7 @@ public final class KaraPipe {
 
     private void enlargeVideo(Path video, Path largeVideo, int width, int height) throws IOException, InterruptedException {
         String newSize = width + "x" + height;
-        log("Enlarging small video to " + newSize + "...");
+        log("Enlarging small video to %s...", newSize);
         List<String> ffmpeg = new ArrayList<>(List.of(
             "-i", video.toString(),
             "-y", "-stats",

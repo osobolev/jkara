@@ -171,7 +171,7 @@ final class Setup {
         Path done = folder.resolve(".done");
         if (Files.exists(done))
             return;
-        log("Installing " + what);
+        log("Installing %s", what);
         step.run();
         Files.write(done, new byte[0]);
     }
