@@ -2,9 +2,14 @@ import json
 import logging
 import os
 import sys
+import ssl
+
 
 logging.getLogger("speechbrain.utils.torch_audio_backend").setLevel(logging.ERROR)
 logging.getLogger("speechbrain.utils.train_logger").setLevel(logging.ERROR)
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
 
 import torch
 import whisperx
