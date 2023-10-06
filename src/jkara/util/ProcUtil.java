@@ -33,7 +33,7 @@ public final class ProcUtil {
         } else {
             normalized = args;
         }
-        String message = format.formatted(normalized);
+        String message = String.format(format, normalized);
         System.out.printf(">>>>> [%s] %s%n", LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")), message);
     }
 
