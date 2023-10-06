@@ -22,7 +22,7 @@ record SoftSources(
     }
 
     static SoftSources create(Path rootDir) throws IOException {
-        Path sources = rootDir.resolve("sources.properties");
+        Path sources = rootDir.resolve("soft.properties");
         return OptFile.read(SoftSources.class, sources).value;
     }
 }
