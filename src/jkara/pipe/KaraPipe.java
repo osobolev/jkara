@@ -192,7 +192,7 @@ public final class KaraPipe {
         StageValue<OAlign> alignOpts = stages.options(ALIGN_OPTS, OAlign.class);
         StageFile ass;
         if (alignOpts.value().words()) {
-            ass = stages.file("subs.ass", text, fastJson);
+            ass = stages.file("subs.ass", text, fastJson, alignOpts);
             if (isStage("Synchronizing words with text", ass)) {
                 List<WordLine> lines = WordTextSync.sync(text.input(), fastJson.input());
                 WordAss.writeAss(
@@ -201,7 +201,7 @@ public final class KaraPipe {
                 );
             }
         } else {
-            StageFile textJson = stages.file("text.json", text, fastJson);
+            StageFile textJson = stages.file("text.json", text, fastJson, alignOpts);
             if (isStage("Synchronizing transcription with text", textJson)) {
                 TextSync.sync(text.input(), fastJson.input(), () -> Files.newBufferedWriter(textJson.output()));
             }
