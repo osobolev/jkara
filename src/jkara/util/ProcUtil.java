@@ -97,8 +97,18 @@ public final class ProcUtil {
             throw new IOException("Error running " + what + ": " + exitCode);
     }
 
+    private static String getSimpleName(String command) {
+        try {
+            Path path = Path.of(command);
+            return path.getFileName().toString();
+        } catch (Exception ex) {
+            // ignore
+        }
+        return command;
+    }
+
     private static void kill(ProcessHandle ph) {
-        log("Killing %s", ph.info().command().orElse("-"));
+        log("Killing %s", ph.info().command().map(ProcUtil::getSimpleName).orElse("-"));
         ph.descendants().forEach(ProcessHandle::destroy);
         ph.destroy();
     }
