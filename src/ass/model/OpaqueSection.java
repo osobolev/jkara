@@ -15,7 +15,7 @@ public final class OpaqueSection implements IAssSection {
 
     @Override
     public String toString() {
-        return name == null ? "<header>" : "Section " +name;
+        return name == null ? "<header>" : "Section " + name;
     }
 
     @Override
