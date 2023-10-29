@@ -4,6 +4,7 @@ import jkara.opts.OptFile;
 import jkara.pipe.KaraPipe;
 import jkara.setup.Tools;
 import jkara.sync.SyncException;
+import jkara.util.ProcUtil;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -24,6 +25,8 @@ public final class JKara {
             System.exit(1);
             return;
         }
+
+        ProcUtil.registerShutdown();
 
         try {
             Tools tools = Tools.setup(cmd.rootDir);

@@ -7,15 +7,16 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
 public final class ProcUtil {
+
+
+    private static final Set<Process> running = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     public static void log(String format, Object... args) {
@@ -73,13 +74,19 @@ public final class ProcUtil {
             }
         }
         Process p = pb.start();
-        capture(p.getErrorStream(), System.err);
-        if (out != null) {
-            out.accept(p);
-        } else {
-            capture(p.getInputStream(), System.out);
+        running.add(p);
+        int exitCode;
+        try {
+            capture(p.getErrorStream(), System.err);
+            if (out != null) {
+                out.accept(p);
+            } else {
+                capture(p.getInputStream(), System.out);
+            }
+            exitCode = p.waitFor();
+        } finally {
+            running.remove(p);
         }
-        int exitCode = p.waitFor();
         boolean ok;
         if (exitOk != null) {
             ok = exitOk.test(exitCode);
@@ -88,5 +95,19 @@ public final class ProcUtil {
         }
         if (!ok)
             throw new IOException("Error running " + what + ": " + exitCode);
+    }
+
+    private static void kill(ProcessHandle ph) {
+        log("Killing %s", ph.info().command().orElse("-"));
+        ph.descendants().forEach(ProcessHandle::destroy);
+        ph.destroy();
+    }
+
+    private static void killRunning() {
+        running.forEach(p -> kill(p.toHandle()));
+    }
+
+    public static void registerShutdown() {
+        Runtime.getRuntime().addShutdownHook(new Thread(ProcUtil::killRunning));
     }
 }
