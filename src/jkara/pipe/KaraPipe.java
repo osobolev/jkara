@@ -83,7 +83,7 @@ public final class KaraPipe {
     }
 
     private static Path info(Path audio) {
-        return oneOfSiblings(audio, (audioName, baseName) -> Stream.of(audioName, baseName).map(name -> name + ".info.json"));
+        return oneOfSiblings(audio, (audioName, baseName) -> Stream.of(audioName, baseName, null).map(name -> name == null ? "info.json" : name + ".info.json"));
     }
 
     public void downloadYoutube(String url, Path audio, boolean newProject) throws IOException, InterruptedException {
