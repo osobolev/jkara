@@ -20,7 +20,7 @@ sourceSets {
     main {
         java.setSrcDirs(listOf("src"))
     }
-    test {
+    create("manual") {
         java.setSrcDirs(listOf("test"))
     }
 }
@@ -33,6 +33,14 @@ tasks.withType(JavaCompile::class) {
 dependencies {
     implementation("io.github.java-diff-utils:java-diff-utils:4.12")
     implementation("org.json:json:20231013")
+}
+
+configurations["manualImplementation"].extendsFrom(configurations["implementation"])
+configurations["manualRuntimeOnly"].extendsFrom(configurations["runtimeOnly"])
+configurations["manualCompileOnly"].extendsFrom(configurations["compileOnly"])
+
+dependencies {
+    "manualImplementation"(sourceSets["main"].output)
 }
 
 application {
