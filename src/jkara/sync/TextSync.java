@@ -2,7 +2,7 @@ package jkara.sync;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.algorithm.DiffAlgorithmFactory;
-import com.github.difflib.algorithm.myers.MeyersDiff;
+import com.github.difflib.algorithm.myers.MyersDiff;
 import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Chunk;
 import com.github.difflib.patch.Patch;
@@ -54,7 +54,7 @@ public final class TextSync {
     }
 
     private void align(List<CWS> real, List<CWS> fast) throws SyncException {
-        DiffAlgorithmFactory factory = MeyersDiff.factory();
+        DiffAlgorithmFactory factory = MyersDiff.factory();
         Patch<CWS> diff = DiffUtils.diff(fast, real, factory.create((cw1, cw2) -> cw1.ch == cw2.ch), null, true);
         for (AbstractDelta<CWS> delta : diff.getDeltas()) {
             switch (delta.getType()) {
