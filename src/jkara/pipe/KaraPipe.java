@@ -80,7 +80,7 @@ public final class KaraPipe {
     }
 
     private static Path video(Path audio) {
-        return oneOfSiblings(audio, (audioName, baseName) -> Stream.of(".webm", ".mp4").map(ext -> baseName + ext));
+        return oneOfSiblings(audio, (audioName, baseName) -> Stream.of(".webm", ".mp4", ".webm.mp4").map(ext -> baseName + ext));
     }
 
     private static Path info(Path audio) {
@@ -105,13 +105,14 @@ public final class KaraPipe {
                 url
             );
         } else {
-            Path video = video(audio);
+            Path outVideo = video(audio);
             runner.runPythonExe(
                 "yt-dlp",
                 "--write-info-json",
-                "--output", video.toString(),
+                "--output", outVideo.toString(),
                 url
             );
+            Path video = video(audio);
             log("Cutting downloaded video...");
             CutRange realCut = range.getRealCut(runner, video);
             String tmpName = splitName(video, (baseName, ext) -> baseName + ".tmp" + ext);
