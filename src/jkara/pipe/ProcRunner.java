@@ -2,8 +2,8 @@ package jkara.pipe;
 
 import jkara.setup.Tools;
 import jkara.util.ProcUtil;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import jkara.util.Util;
+import smalljson.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -75,6 +75,6 @@ final class ProcRunner {
                 // ignore
             }
         }, null);
-        return new JSONObject(new JSONTokener(bos.toString(StandardCharsets.UTF_8)));
+        return Util.JSON.parseObject(bos.toString(StandardCharsets.UTF_8));
     }
 }

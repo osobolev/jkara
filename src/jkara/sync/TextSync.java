@@ -8,8 +8,10 @@ import com.github.difflib.patch.Chunk;
 import com.github.difflib.patch.Patch;
 import jkara.util.OutputFactory;
 import jkara.util.Util;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import smalljson.JSONArray;
+import smalljson.JSONObject;
+import smalljson.JSONWriteOptions;
+import smalljson.JSONWriter;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -143,14 +145,14 @@ public final class TextSync {
                 "end", segment.end(),
                 "text", sanitize(segment.text())
             ));
-            array.put(obj);
+            array.add(obj);
         }
         JSONObject root = new JSONObject(Map.of(
             "segments", array,
             "language", fast.language
         ));
         try (Writer w = textJson.open()) {
-            root.write(w, 2, 0);
+            JSONWriter.writeTo(JSONWriteOptions.PRETTY, root, w);
         }
     }
 }

@@ -9,7 +9,8 @@ import jkara.opts.OptFile;
 import jkara.scroll.AssJoiner;
 import jkara.setup.Tools;
 import jkara.sync.*;
-import org.json.JSONObject;
+import smalljson.JSONArray;
+import smalljson.JSONObject;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -285,9 +286,9 @@ public final class KaraPipe {
                 "-show_entries", "stream=width,height",
                 video.toString()
             ));
-            JSONObject stream = obj.getJSONArray("streams").getJSONObject(0);
-            int width = stream.getInt("width");
-            int height = stream.getInt("height");
+            JSONObject stream = obj.get("streams", JSONArray.class).get(0, JSONObject.class);
+            int width = stream.get("width", int.class).intValue();
+            int height = stream.get("height", int.class).intValue();
             if (width < 1280) {
                 int scale = (int) Math.ceil(1280.0 / width);
                 int newWidth = scale * width;

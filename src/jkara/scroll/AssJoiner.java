@@ -7,11 +7,9 @@ import ass.model.ParsedAss;
 import ass.parser.AssParser;
 import jkara.opts.OKaraoke;
 import jkara.util.Util;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import smalljson.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -187,22 +185,20 @@ public final class AssJoiner {
     public static void join(Path origAssPath, Path infoJson, Path newAssPath, OKaraoke opts) throws IOException {
         List<String> titles = new ArrayList<>();
         if (Files.exists(infoJson)) {
-            try (InputStream is = Files.newInputStream(infoJson)) {
-                JSONObject obj = new JSONObject(new JSONTokener(is));
-                String artist = obj.optString("artist", null);
-                String track = obj.optString("track", null);
-                String title = obj.optString("title", null);
-                String fullTitle = obj.optString("fulltitle", null);
-                if (track != null) {
-                    titles.add(track);
-                    if (artist != null) {
-                        titles.add("by " + artist);
-                    }
-                } else if (fullTitle != null) {
-                    titles.add(fullTitle);
-                } else if (title != null) {
-                    titles.add(title);
+            JSONObject obj = Util.JSON.parseObject(infoJson);
+            String artist = obj.opt("artist", String.class);
+            String track = obj.opt("track", String.class);
+            String title = obj.opt("title", String.class);
+            String fullTitle = obj.opt("fulltitle", String.class);
+            if (track != null) {
+                titles.add(track);
+                if (artist != null) {
+                    titles.add("by " + artist);
                 }
+            } else if (fullTitle != null) {
+                titles.add(fullTitle);
+            } else if (title != null) {
+                titles.add(title);
             }
         }
         ParsedAss origAss = AssParser.parse(origAssPath);

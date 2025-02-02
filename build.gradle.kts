@@ -32,7 +32,7 @@ tasks.withType(JavaCompile::class) {
 
 dependencies {
     implementation("io.github.java-diff-utils:java-diff-utils:4.15")
-    implementation("org.json:json:20240303")
+    implementation("io.github.osobolev:small-json:1.3")
 }
 
 configurations["manualImplementation"].extendsFrom(configurations["implementation"])

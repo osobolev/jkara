@@ -1,9 +1,16 @@
 package jkara.pipe;
 
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import jkara.util.Util;
+import smalljson.JSONFactory;
+import smalljson.JSONObject;
+import smalljson.parser.JSONParser;
+import smalljson.parser.JSONToken;
+import smalljson.parser.JSONTokenType;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -114,25 +121,37 @@ final class CutRange {
         return time;
     }
 
+    private static boolean skipTo(JSONParser tok, JSONTokenType type) {
+        while (true) {
+            JSONToken t = tok.getCurrent();
+            if (t.type == JSONTokenType.EOF)
+                return false;
+            if (t.type == type) {
+                tok.next();
+                return true;
+            }
+            tok.next();
+        }
+    }
+
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     private CutRange parseFrameStream(double duration, InputStream in) {
-        JSONTokener tok = new JSONTokener(in);
-        if (tok.skipTo('[') == 0)
+        JSONParser tok = Util.JSON.newParser(JSONFactory.toFast(in));
+        if (!skipTo(tok, JSONTokenType.LSQUARE))
             return this;
-        tok.next();
         FrameAcc keyAcc = new FrameAcc();
         FrameAcc nonKeyAcc = new FrameAcc();
         long prevPercent = -1;
-        while (tok.more()) {
-            JSONObject frame = (JSONObject) tok.nextValue();
+        while (tok.getCurrent().type != JSONTokenType.EOF) {
+            JSONObject frame = tok.parseObject();
             try {
-                double ts = Double.parseDouble(frame.getString("best_effort_timestamp_time"));
+                double ts = frame.get("best_effort_timestamp_time", double.class).doubleValue();
                 long percent = Math.round(ts / duration * 100.0);
                 if (percent != prevPercent) {
                     System.out.printf("Scanning frames: %s%%\r", percent);
                     prevPercent = percent;
                 }
-                String type = frame.getString("pict_type");
+                String type = frame.get("pict_type", String.class);
                 if ("I".equalsIgnoreCase(type)) {
                     keyAcc.add(ts);
                 } else {
@@ -141,9 +160,8 @@ final class CutRange {
             } catch (Exception ex) {
                 // ignore
             }
-            if (tok.skipTo(',') == 0)
+            if (!skipTo(tok, JSONTokenType.COMMA))
                 break;
-            tok.next();
         }
         System.out.println();
         Double realStart = getFrameTime(start, acc -> acc.lastBeforeStart, keyAcc, nonKeyAcc);
@@ -183,8 +201,7 @@ final class CutRange {
                 "-show_entries", "format=duration",
                 file.toString()
             ));
-            String durationStr = obj.getJSONObject("format").getString("duration");
-            duration = Double.parseDouble(durationStr);
+            duration = obj.get("format", JSONObject.class).get("duration", double.class).doubleValue();
         }
         {
             AtomicReference<CutRange> realCut = new AtomicReference<>(this);

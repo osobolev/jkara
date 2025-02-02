@@ -1,5 +1,8 @@
 package jkara.util;
 
+import smalljson.JSONFactory;
+import smalljson.JSONFeature;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,6 +12,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class Util {
+
+    public static final JSONFactory JSON = JSONFactory
+        .options()
+        .feature(JSONFeature.NAN_INF_NUMBERS)
+        .feature(JSONFeature.EXTRA_CHARS)
+        .build();
 
     public static boolean isLetter(char ch) {
         return Character.isLetterOrDigit(ch) || ch == '\'';

@@ -1,4 +1,4 @@
 module jkara {
     requires io.github.javadiffutils;
-    requires org.json;
+    requires io.github.osobolev.smalljson;
 }
