@@ -48,10 +48,8 @@ application {
     mainModule.set("jkara")
 }
 
-tasks.named("clean").configure {
-    doLast {
-        delete("$rootDir/distr")
-    }
+tasks.clean {
+    delete("$rootDir/distr")
 }
 
 tasks.register("distr", Copy::class) {
