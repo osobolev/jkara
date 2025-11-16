@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 public final class ProcUtil {
 
-
     private static final Set<Process> running = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
