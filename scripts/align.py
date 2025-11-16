@@ -25,8 +25,10 @@ def align(audio, text_json, aligned_json):
         model = "jonatasgrosman/wav2vec2-large-xlsr-53-russian"
     elif language == "sr":
         model = "dnikolic/wav2vec2-xlsr-530-serbian-colab"
-    else:
+    elif language == "en":
         model = "WAV2VEC2_ASR_LARGE_LV60K_960H"
+    else:
+        model = None
     align_model, align_metadata = whisperx.load_align_model(language, device, model_name=model)
     aligned = whisperx.align(data["segments"], align_model, align_metadata, audio, device, return_char_alignments=True)
     
