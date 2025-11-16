@@ -50,7 +50,7 @@ application {
 
 tasks.named("clean").configure {
     doLast {
-        project.delete("$rootDir/distr")
+        delete("$rootDir/distr")
     }
 }
 
