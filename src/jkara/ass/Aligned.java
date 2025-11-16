@@ -42,7 +42,7 @@ final class Aligned {
         JSONArray segs = obj.get("segments", JSONArray.class);
         for (int i = 0; i < segs.length(); i++) {
             JSONObject seg = segs.get(i, JSONObject.class);
-            JSONArray csegs = seg.get("char-segments", JSONArray.class);
+            JSONArray csegs = seg.get("chars", JSONArray.class);
             for (int j = 0; j < csegs.length(); j++) {
                 JSONObject cseg = csegs.get(j, JSONObject.class);
                 double start = getDouble(cseg, "start", i, seg);
