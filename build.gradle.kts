@@ -1,6 +1,6 @@
 plugins {
     id("application")
-    id("com.github.ben-manes.versions") version "0.53.0"
+    id("com.github.ben-manes.versions") version "0.54.0"
 }
 
 group = "io.github.osobolev"
