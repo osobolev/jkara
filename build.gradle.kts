@@ -31,7 +31,7 @@ tasks.withType(JavaCompile::class).configureEach {
 }
 
 dependencies {
-    implementation("io.github.java-diff-utils:java-diff-utils:4.16")
+    implementation("io.github.java-diff-utils:java-diff-utils:4.17")
     implementation("io.github.osobolev:small-json:1.4")
 }
 
