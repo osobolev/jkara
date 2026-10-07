@@ -11,7 +11,7 @@ repositories {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -26,7 +26,7 @@ sourceSets {
 
 tasks.withType(JavaCompile::class).configureEach {
     options.encoding = "UTF-8"
-    options.release.set(17)
+    options.release = 17
 }
 
 dependencies {
@@ -43,8 +43,8 @@ dependencies {
 }
 
 application {
-    mainClass.set("jkara.JKara")
-    mainModule.set("jkara")
+    mainClass = "jkara.JKara"
+    mainModule = "jkara"
 }
 
 tasks.clean {
